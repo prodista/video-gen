@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>AI Video Generator</title>
+    <title>Video Generator</title>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 50px; }
+        body { font-family: comic-sans; text-align: center; padding: 50px; }
         #loader { display: none; margin-top: 20px; color: blue; }
         .history-item { border-bottom: 1px solid #ccc; padding: 10px; }
     </style>
 </head>
 <body>
-    <h1>AI Video Prompt</h1>
+    <h1>Video Generator</h1>
     <input id="user" type="text" placeholder="Your Name"><br><br>
     <textarea id="prompt" placeholder="Describe the video you want..."></textarea><br><br>
     <button onclick="generate()">Generate Video</button>
 
-    <div id="loader">🎥 AI is rendering your video... please wait.</div>
+    <div id="loader">🎥 Rendering video... please wait.</div>
     <div id="history"></div>
 
     <script>
@@ -50,3 +50,4 @@
     </script>
 </body>
 </html>
+
