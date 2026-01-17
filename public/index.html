@@ -39,15 +39,21 @@
         }
 
         async function loadHistory() {
-            const res = await fetch('/api/history');
-            const data = await res.json();
-            const div = document.getElementById('history');
-            div.innerHTML = "<h3>Recent Prompts</h3>" + data.map(h => 
-                `<div class="history-item"><b>${h.user}:</b> ${h.prompt} (${h.status})</div>`
-            ).join('');
+            const response = await fetch('/api/history');
+            const messages = await response.json();
+            
+            const historyContainer = document.getElementById('history-display');
+            historyContainer.innerHTML = messages.map(msg => `
+                <div class="chat-bubble">
+                    <strong>${msg.user}:</strong> ${msg.prompt}
+                    <span class="status-tag">${msg.status}</span>
+                </div>
+            `).join('');
         }
-        loadHistory();
+        
+        window.onload = loadHistory;
     </script>
 </body>
 </html>
+
 
