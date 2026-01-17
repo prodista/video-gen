@@ -25,7 +25,6 @@ async def get_history():
 
 @app.post("/api/generate")
 async def generate_video(data: VideoPrompt):
-    # 1. Save the request to MongoDB
     task = {
         "user": data.user,
         "prompt": data.prompt,
@@ -33,5 +32,5 @@ async def generate_video(data: VideoPrompt):
     }
     tasks_col.insert_one(task)
     
-    # 2. Logic to call your Video AI would go here
     return {"message": "Video generation started!", "prompt": data.prompt}
+
