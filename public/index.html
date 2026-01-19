@@ -1,61 +1,88 @@
-<!DOCTYPE html>
-<html>
 <head>
-    <title>Video Generator</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Video Creator</title>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 50px; }
-        #loader { display: none; margin-top: 20px; color: blue; }
-        .history-item { border-bottom: 1px solid #ccc; padding: 10px; }
+        :root {
+            --primary: #007AFF; /* Apple Blue */
+            --bg: #F2F2F7;
+            --card: #FFFFFF;
+        }
+
+        body { 
+            margin: 0; 
+            background-color: var(--bg); 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* The "Mobile Container" */
+        .app-container {
+            width: 100%;
+            max-width: 430px; /* Width of an iPhone 15 Pro Max */
+            min-height: 100vh;
+            background: var(--card);
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        h1 { font-size: 24px; font-weight: 700; margin-bottom: 20px; }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #DDD;
+            border-radius: 12px; /* Rounded mobile look */
+            font-size: 16px; /* Prevents iOS auto-zoom on focus */
+            box-sizing: border-box;
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        button:active { opacity: 0.7; }
+
+        #history {
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .chat-bubble {
+            background: #E9E9EB;
+            padding: 12px;
+            border-radius: 15px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
-    <h1>Video Generator</h1>
-    <input id="user" type="text" placeholder="Your Name"><br><br>
-    <textarea id="prompt" placeholder="Describe the video you want..."></textarea><br><br>
-    <button onclick="generate()">Generate Video</button>
-
-    <div id="loader">🎥 Rendering video... please wait.</div>
-    <div id="history"></div>
-
-    <script>
-        async function generate() {
-            const user = document.getElementById('user').value || "Guest";
-            const prompt = document.getElementById('prompt').value;
-            const loader = document.getElementById('loader');
-
-            loader.style.display = 'block';
-
-            await fetch('/api/generate', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ user, prompt })
-            });
-
-            setTimeout(() => {
-                loader.style.display = 'none';
-                alert("Task submitted! Check back in 1 minute.");
-                loadHistory();
-            }, 2000);
-        }
-
-        async function loadHistory() {
-            const response = await fetch('/api/history');
-            const messages = await response.json();
-            
-            const historyContainer = document.getElementById('history-display');
-            historyContainer.innerHTML = messages.map(msg => `
-                <div class="chat-bubble">
-                    <strong>${msg.user}:</strong> ${msg.prompt}
-                    <span class="status-tag">${msg.status}</span>
-                </div>
-            `).join('');
-        }
+    <div class="app-container">
+        <h1>AI Video Gen</h1>
         
-        window.onload = loadHistory;
-    </script>
+        <input id="user" type="text" placeholder="Username">
+        <textarea id="prompt" rows="4" placeholder="Describe your video..."></textarea>
+        
+        <button onclick="generate()">Generate AI Video</button>
+
+        <div id="loader" style="display:none; margin-top:20px;">
+            🌀 Processing...
+        </div>
+
+        <div id="history">
+            </div>
+    </div>
 </body>
-</html>
-
-
-
