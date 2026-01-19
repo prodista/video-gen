@@ -1,88 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Video Creator</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>AI Video Gen</title>
     <style>
-        :root {
-            --primary: #007AFF; /* Apple Blue */
-            --bg: #F2F2F7;
-            --card: #FFFFFF;
-        }
+        :root { --primary-ios: #007AFF; --primary-android: #6200EE; }
+        
+        body { margin: 0; background: #f4f4f9; font-family: sans-serif; display: flex; justify-content: center; }
 
-        body { 
-            margin: 0; 
-            background-color: var(--bg); 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            display: flex;
-            justify-content: center;
-        }
-
-        /* The "Mobile Container" */
         .app-container {
-            width: 100%;
-            max-width: 430px; /* Width of an iPhone 15 Pro Max */
-            min-height: 100vh;
-            background: var(--card);
-            box-shadow: 0 0 20px rgba(0,0,0,0.05);
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-            box-sizing: border-box;
+            width: 100%; max-width: 430px; min-height: 100vh;
+            background: white; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box;
         }
 
-        h1 { font-size: 24px; font-weight: 700; margin-bottom: 20px; }
-
-        input, textarea {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            border: 1px solid #DDD;
-            border-radius: 12px; /* Rounded mobile look */
-            font-size: 16px; /* Prevents iOS auto-zoom on focus */
-            box-sizing: border-box;
+        /* --- Platform Specific Styles --- */
+        .platform-android h1 { color: var(--primary-android); font-family: 'Roboto', sans-serif; }
+        .platform-android button { 
+            background: var(--primary-android); border-radius: 4px; text-transform: uppercase; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
         }
 
-        button {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 16px;
-            cursor: pointer;
-            transition: opacity 0.2s;
+        .platform-ios h1 { color: #000; font-family: -apple-system, sans-serif; }
+        .platform-ios button { background: var(--primary-ios); border-radius: 12px; font-weight: 600; }
+
+        /* --- Shared UI Elements --- */
+        textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 10px; font-size: 16px; }
+        button { border: none; color: white; padding: 16px; cursor: pointer; font-size: 16px; }
+        
+        .history-card { 
+            background: #f9f9f9; padding: 12px; border-radius: 10px; 
+            margin-top: 10px; border-left: 4px solid #ccc; font-size: 14px;
         }
 
-        button:active { opacity: 0.7; }
-
-        #history {
-            margin-top: 30px;
-            text-align: left;
-        }
-
-        .chat-bubble {
-            background: #E9E9EB;
-            padding: 12px;
-            border-radius: 15px;
-            margin-bottom: 10px;
-            font-size: 14px;
-        }
+        video { width: 100%; border-radius: 12px; margin-top: 15px; background: #000; }
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <h1>AI Video Gen</h1>
+    <div class="app-container" id="mainApp">
+        <h1>AI Video Generator</h1>
         
-        <input id="user" type="text" placeholder="Username">
-        <textarea id="prompt" rows="4" placeholder="Describe your video..."></textarea>
+        <input id="userName" type="text" placeholder="Your Name" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;">
+        <textarea id="promptInput" rows="3" placeholder="Describe the scene..."></textarea>
         
-        <button onclick="generate()">Generate AI Video</button>
+        <button onclick="generateVideo()">Create AI Video</button>
 
-        <div id="loader" style="display:none; margin-top:20px;">
-            🌀 Processing...
+        <div id="status" style="margin-top:15px; font-weight:bold; display:none;">🎥 AI is thinking...</div>
+        
+        <div id="videoResult" style="display:none;">
+            <video id="player" controls playsinline></video>
         </div>
 
-        <div id="history">
-            </div>
+        <div id="historyList"></div>
     </div>
+
+    <script>
+        // 1. Platform Detection
+        const ua = navigator.userAgent;
+        const app = document.getElementById('mainApp');
+        if (/android/i.test(ua)) app.classList.add('platform-android');
+        else if (/iPhone|iPad|iPod/i.test(ua)) app.classList.add('platform-ios');
+
+        // 2. Load History on Start
+        async function loadHistory() {
+            const res = await fetch('/api/history');
+            const data = await res.json();
+            document.getElementById('historyList').innerHTML = "<h3>Previous Prompts</h3>" + 
+                data.map(h => `<div class="history-card"><b>${h.user}:</b> ${h.prompt}</div>`).join('');
+        }
+
+        // 3. Generate Logic
+        async function generateVideo() {
+            const user = document.getElementById('userName').value || "Guest";
+            const prompt = document.getElementById('promptInput').value;
+            const status = document.getElementById('status');
+            
+            status.style.display = 'block';
+
+            const res = await fetch('/api/generate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ user, prompt })
+            });
+
+            const result = await res.json();
+            status.innerText = "✅ Prompt Saved to MongoDB!";
+            loadHistory();
+        }
+
+        window.onload = loadHistory;
+    </script>
 </body>
+</html>
