@@ -5,7 +5,7 @@ from pymongo import MongoClient
 app = FastAPI()
 
 # Connect to MongoDB via Vercel Environment Variable
-client = MongoClient(os.getenv("mongo_uri"))
+client = MongoClient(os.getenv("MONGO_URI"))
 db = client['ai_video_app']
 history_col = db['history']
 
@@ -24,4 +24,5 @@ async def save_prompt(data: dict = Body(...)):
         "status": "pending"
     })
     return {"status": "success"}
+
 
