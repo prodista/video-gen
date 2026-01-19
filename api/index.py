@@ -1,36 +1,26 @@
 import os
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Body
 from pymongo import MongoClient
-from pydantic import BaseModel
 
 app = FastAPI()
 
-# MongoDB Setup (using Environment Variables for security)
-MONGO_URI = os.getenv("MONGODB_URI")
-client = MongoClient(MONGO_URI)
-db = client['ai_video_db']
-tasks_col = db['video_tasks']
-
-class VideoPrompt(BaseModel):
-    user: str
-    prompt: str
+# Connect to MongoDB via Vercel Environment Variable
+client = MongoClient(os.getenv(mongo_uri))
+db = client['ai_video_app']
+history_col = db['history']
 
 @app.get("/api/history")
 async def get_history():
-    history = list(tasks_col.find().sort("_id", -1).limit(10))
-    # Convert MongoDB ObjectIds to strings for JSON
-    clean_history = [{"user": h['user'], "prompt": h['prompt'], "status": h.get('status', 'pending')} for h in history]
-    return clean_history
+    # Fetch last 10 entries from MongoDB
+    cursor = history_col.find({}, {"_id": 0}).sort("_id", -1).limit(10)
+    return list(cursor)
 
 @app.post("/api/generate")
-async def generate_video(data: VideoPrompt):
-    task = {
-        "user": data.user,
-        "prompt": data.prompt,
-        "status": "processing"
-    }
-    tasks_col.insert_one(task)
-    
-    return {"message": "Video generation started!", "prompt": data.prompt}
-
+async def save_prompt(data: dict = Body(...)):
+    # Save the user request to MongoDB
+    history_col.insert_one({
+        "user": data.get("user"),
+        "prompt": data.get("prompt"),
+        "status": "pending"
+    })
+    return {"status": "success"}
