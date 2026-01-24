@@ -1,43 +1,36 @@
 import os
+import datetime
 from fastapi import FastAPI
 from pymongo import MongoClient
 
 app = FastAPI()
 
+# 몽고DB 연결 (환경변수 사용)
+uri = os.environ.get("MONGODB_URI")
+client = MongoClient(uri)
+db = client['video_gen']
+
 @app.post("/api/onboarding")
 async def save_onboarding(data: dict):
     try:
-        uri = os.environ.get("MONGODB_URI")
-        client = MongoClient(uri)
-        db = client['video_gen']
-        
-        # 'users' 컬렉션에 온보딩 정보 저장
         user_data = {
             "participantId": data.get("participantId"),
             "anxietyFactor": data.get("anxietyFactor"),
-            "initialAnxiety": data.get("initialAnxiety"),
+            "initialAnxiety": int(data.get("initialAnxiety")),
             "purpose": data.get("purpose"),
-            "createdAt": datetime.datetime.now() # 가입 시간 기록
+            "timestamp": datetime.datetime.now()
         }
-        
         db.users.insert_one(user_data)
-        return {"status": "success", "message": "Onboarding complete"}
+        return {"status": "success"}
     except Exception as e:
         return {"error": str(e)}
-        
+
 @app.get("/api/history")
 async def get_history():
-    # Calling it INSIDE the function forces Vercel to look for it NOW
-    uri = os.environ.get("MONGODB_URI") 
-    
-    if not uri:
-        return {"error": "Still missing. Check Vercel 'Production' checkbox."}
-    
     try:
-        client = MongoClient(uri)
-        db = client['video_gen']
-        history = list(db.history.find({}, {"_id": 0}))
-        return history
+        # 최신순으로 5개만 가져오기
+        data = list(db.history.find({}, {"_id": 0}).sort("_id", -1).limit(5))
+        return data
     except Exception as e:
         return {"error": str(e)}
 
@@ -50,6 +43,7 @@ async def save_prompt(data: dict):
         return {"status": "success"}
     except Exception as e:
         return {"error": str(e)}
+
 
 
 
