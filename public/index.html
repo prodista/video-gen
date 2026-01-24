@@ -24,8 +24,12 @@
             <label>ID</label>
             <input type="text" id="participantId" placeholder="예: User_01">
 
-            <label>요즘 나를 불안하게 하는 것</label>
-            <textarea id="anxietyFactor" placeholder="예: 업무 마감, 관계 고민 등"></textarea>
+            <label>요즘 나를 불안하게 하는 것들 (여러 개 추가 가능)</label>
+            <div style="display: flex; gap: 5px;">
+                <input type="text" id="anxietyInput" placeholder="예: 직장, 관계, 미래, 건강 (엔터 또는 추가 클릭)">
+                <button type="button" onclick="addAnxietyTag()" style="width: 80px; background: #6c757d;">추가</button>
+            </div>
+            <div id="anxietyTagsContainer" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; min-height: 30px;"></div>
 
             <label>현재 불안 수치: <span id="levelDisplay">5</span></label>
             <input type="range" id="initialAnxiety" min="1" max="10" value="5">
@@ -132,4 +136,5 @@
     </script>
 </body>
 </html>
+
 
