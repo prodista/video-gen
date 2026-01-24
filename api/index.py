@@ -10,8 +10,10 @@ uri = os.getenv("MONGODB_URI")
 
 @app.get("/api/history")
 async def get_history():
-    if not uri:
-        return {"error": "Vercel Environment Variable 'MONGODB_URI' is missing!"}
+    # This will list the NAMES of the variables Vercel can see
+    # (It won't show the actual passwords for security)
+    visible_keys = list(os.environ.keys())
+    return {"visible_keys": visible_keys, "looking_for": "MONGODB_URI"}
     
     try:
         # 2. We add a timeout so it doesn't spin forever
@@ -41,4 +43,5 @@ async def save_prompt(data: dict):
         return {"status": "success"}
     except Exception as e:
         return {"error": str(e)}
+
 
