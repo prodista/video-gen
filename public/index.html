@@ -1,129 +1,24 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>AI Video Gen</title>
-    <style>
-        :root { --primary-ios: #007AFF; --primary-android: #6200EE; }
-        
-        body { margin: 0; background: #f4f4f9; font-family: sans-serif; display: flex; justify-content: center; }
+<div id="onboarding-container" style="max-width: 400px; margin: auto; padding: 20px;">
+    <h2>환영합니다!</h2>
+    <p>당신을 더 잘 이해하기 위한 기초 정보입니다.</p>
 
-        .app-container {
-            width: 100%; max-width: 430px; min-height: 100vh;
-            background: white; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box;
-        }
+    <label>Participant ID #</label>
+    <input type="text" id="participantId" placeholder="예: User_01" style="width:100%; margin-bottom:15px;">
 
-        /* --- Platform Specific Styles --- */
-        .platform-android h1 { color: var(--primary-android); font-family: 'Roboto', sans-serif; }
-        .platform-android button { 
-            background: var(--primary-android); border-radius: 4px; text-transform: uppercase; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
-        }
+    <label>요즘 나를 힘들게 하는 불안 요소</label>
+    <textarea id="anxietyFactor" placeholder="예: 업무 마감, 대인 관계 등" style="width:100%; margin-bottom:15px;"></textarea>
 
-        .platform-ios h1 { color: #000; font-family: -apple-system, sans-serif; }
-        .platform-ios button { background: var(--primary-ios); border-radius: 12px; font-weight: 600; }
+    <label>초기 불안 수치 (1-10)</label>
+    <input type="range" id="initialAnxiety" min="1" max="10" style="width:100%;">
+    <span id="levelDisplay">5</span>
 
-        /* --- Shared UI Elements --- */
-        textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 10px; font-size: 16px; }
-        button { border: none; color: white; padding: 16px; cursor: pointer; font-size: 16px; }
-        
-        .history-card { 
-            background: #f9f9f9; padding: 12px; border-radius: 10px; 
-            margin-top: 10px; border-left: 4px solid #ccc; font-size: 14px;
-        }
+    <label style="margin-top:15px; display:block;">사용 목적</label>
+    <select id="purpose" style="width:100%; margin-bottom:20px;">
+        <option value="care">마음 챙김 및 케어</option>
+        <option value="tracking">기분 트래킹</option>
+        <option value="video">영상 생성 체험</option>
+    </select>
 
-        video { width: 100%; border-radius: 12px; margin-top: 15px; background: #000; }
-    </style>
-</head>
-<body>
-    <div class="app-container" id="mainApp">
-        <h1>AI Video Generator</h1>
-        
-        <input id="userName" type="text" placeholder="Your Name" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;">
-        <textarea id="promptInput" rows="3" placeholder="Describe the scene..."></textarea>
-        
-        <button onclick="generateVideo()">Create AI Video</button>
-        
-        <div id="statusText"></div>
-
-        <div id="status" style="margin-top:15px; font-weight:bold; display:none;">🎥 AI is thinking...</div>
-        
-        <div id="videoResult" style="display:none;">
-            <video id="player" controls playsinline></video>
-        </div>
-
-        <div id="historyList"></div>
-    </div>
-
-    <script>
-        // Function to handle the button click
-        async function generateVideo() {
-            console.log("Button clicked!"); // Check your console to see this
-            
-            const promptInput = document.getElementById('promptInput');
-            const statusText = document.getElementById('statusText');
-            
-            if (!promptInput.value) {
-                alert("Please enter a prompt!");
-                return;
-            }
-        
-            statusText.innerText = "Processing...";
-        
-            try {
-                const response = await fetch('/api/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        user: "User", 
-                        prompt: promptInput.value 
-                    })
-                });
-        
-                if (response.ok) {
-                    statusText.innerText = "Success! History updated.";
-                    promptInput.value = ""; 
-                    loadHistory(); // Refresh the list
-                } else {
-                    statusText.innerText = "Server error. Check Vercel logs.";
-                }
-            } catch (err) {
-                console.error("Fetch error:", err);
-                statusText.innerText = "Connection failed.";
-            }
-        }
-        
-        // Function to pull data from MongoDB
-        async function loadHistory() {
-            const historyList = document.getElementById('historyList');
-            if (!historyList) return;
-        
-            try {
-                const response = await fetch('/api/history');
-                const data = await response.json();
-                
-                if (data.length === 0) {
-                    historyList.innerHTML = "<p>No history found.</p>";
-                } else {
-                    historyList.innerHTML = data.map(item => `
-                        <div style="border-bottom: 1px solid #ccc; padding: 10px;">
-                            <strong>${item.user}:</strong> ${item.prompt}
-                        </div>
-                    `).join('');
-                }
-            } catch (err) {
-                console.log("Load error:", err);
-            }
-        }
-        
-        // Automatically load history when page opens
-        window.onload = loadHistory;
-                
-    </script>
-</body>
-</html>
-
-
-
-
+    <button onclick="submitOnboarding()" style="width:100%; padding:10px; background-color:#007bff; color:white; border:none; border-radius:5px;">시작하기</button>
+    <p id="onboardingStatus" style="color: blue;"></p>
+</div>
