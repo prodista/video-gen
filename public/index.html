@@ -55,73 +55,71 @@
     </div>
 
     <script>
-        // 1. Function to Save a Prompt to MongoDB
+        // Function to handle the button click
         async function generateVideo() {
+            console.log("Button clicked!"); // Check your console to see this
+            
             const promptInput = document.getElementById('promptInput');
             const statusText = document.getElementById('statusText');
-            const promptValue = promptInput.value;
-        
-            if (!promptValue) {
+            
+            if (!promptInput.value) {
                 alert("Please enter a prompt!");
                 return;
             }
         
-            statusText.innerText = "Generating & Saving...";
+            statusText.innerText = "Processing...";
         
             try {
                 const response = await fetch('/api/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
-                        user: "Guest User", // You can change this to a real username later
-                        prompt: promptValue 
+                        user: "User", 
+                        prompt: promptInput.value 
                     })
                 });
         
                 if (response.ok) {
-                    statusText.innerText = "Saved to History!";
-                    promptInput.value = ""; // Clear the input
-                    loadHistory(); // Refresh the list immediately
+                    statusText.innerText = "Success! History updated.";
+                    promptInput.value = ""; 
+                    loadHistory(); // Refresh the list
                 } else {
-                    statusText.innerText = "Error saving to database.";
+                    statusText.innerText = "Server error. Check Vercel logs.";
                 }
             } catch (err) {
-                console.error("Submission error:", err);
+                console.error("Fetch error:", err);
                 statusText.innerText = "Connection failed.";
             }
         }
         
-        // 2. Function to Load History from MongoDB
+        // Function to pull data from MongoDB
         async function loadHistory() {
             const historyList = document.getElementById('historyList');
-            
+            if (!historyList) return;
+        
             try {
                 const response = await fetch('/api/history');
                 const data = await response.json();
-        
+                
                 if (data.length === 0) {
-                    historyList.innerHTML = "<p>No history yet. Be the first!</p>";
-                    return;
+                    historyList.innerHTML = "<p>No history found.</p>";
+                } else {
+                    historyList.innerHTML = data.map(item => `
+                        <div style="border-bottom: 1px solid #ccc; padding: 10px;">
+                            <strong>${item.user}:</strong> ${item.prompt}
+                        </div>
+                    `).join('');
                 }
-        
-                // Create the HTML for the list
-                historyList.innerHTML = data.map(item => `
-                    <div style="background: #f4f4f4; padding: 10px; margin-bottom: 10px; border-radius: 8px; border-left: 5px solid #007bff;">
-                        <small style="color: #666;">${item.user || 'Anonymous'}</small>
-                        <p style="margin: 5px 0 0 0; font-weight: bold;">${item.prompt}</p>
-                    </div>
-                `).join('');
-        
             } catch (err) {
-                console.error("Load error:", err);
-                historyList.innerHTML = "<p style='color:red;'>Could not load history.</p>";
+                console.log("Load error:", err);
             }
         }
         
-        // 3. Run loadHistory automatically when the page opens
+        // Automatically load history when page opens
         window.onload = loadHistory;
                 
     </script>
 </body>
 </html>
+
 
