@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <title>불안 퇴치 서비스</title>
     <style>
         body { font-family: 'Pretendard', sans-serif; background-color: #f8f9fa; margin: 0; padding: 20px; }
@@ -55,7 +56,15 @@
                 <div id="summaryFactors" class="tag-container"></div>
                 <p><strong>오늘의 불안 지수:</strong> <span id="summaryLevel"></span></p>
             </div>
-            <button onclick="location.reload()" style="background:#6c757d;">다시 설정하기</button>
+        
+            <button onclick="toggleTracking()" style="background:#28a745; margin-top:10px;">📊 나의 변화 확인하기 (트래킹)</button>
+        
+            <div id="tracking-section" class="hidden" style="margin-top:20px;">
+                <h3>불안 수치 변화</h3>
+                <canvas id="anxietyChart" width="400" height="200"></canvas>
+            </div>
+        
+            <button onclick="location.reload()" style="background:#6c757d; margin-top:10px;">다시 설정하기</button>
         </div>
     </div>
 
@@ -134,7 +143,55 @@
                 status.innerText = "연결 오류가 발생했습니다.";
             }
         }
+
+        let myChart = null; // 차트 객체를 저장할 변수
+        
+        function toggleTracking() {
+            const trackingSection = document.getElementById('tracking-section');
+            trackingSection.classList.toggle('hidden');
+        
+            if (!trackingSection.classList.contains('hidden')) {
+                renderChart();
+            }
+        }
+        
+        function renderChart() {
+            const ctx = document.getElementById('anxietyChart').getContext('2d');
+            
+            // 이미 차트가 있다면 파괴하고 새로 그림 (중복 생성 방지)
+            if (myChart) {
+                myChart.destroy();
+            }
+        
+            // 샘플 데이터 (지금은 초기 수치 하나만 있지만, 나중엔 DB에서 여러 데이터를 가져옵니다)
+            const initialLevel = document.getElementById('initialAnxiety').value;
+            
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['1주차', '2주차', '3주차', '4주차', '현재'], // 예시 라벨
+                    datasets: [{
+                        label: '불안 지수',
+                        data: [7, 6, 8, 5, initialLevel], // 앞에 4개는 예시, 마지막이 현재 입력값
+                        borderColor: '#007bff',
+                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 10
+                        }
+                    }
+                }
+            });
+        }
+        
     </script>
 </body>
 </html>
+
 
