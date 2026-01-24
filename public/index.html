@@ -55,73 +55,47 @@
     </div>
 
     <script>
-        // 1. Function to Save a Prompt to MongoDB
-        async function generateVideo() {
-            const promptInput = document.getElementById('promptInput');
-            const statusText = document.getElementById('statusText');
-            const promptValue = promptInput.value;
-        
-            if (!promptValue) {
-                alert("Please enter a prompt!");
-                return;
-            }
-        
-            statusText.innerText = "Generating & Saving...";
-        
-            try {
-                const response = await fetch('/api/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        user: "Guest User", // You can change this to a real username later
-                        prompt: promptValue 
-                    })
-                });
-        
-                if (response.ok) {
-                    statusText.innerText = "Saved to History!";
-                    promptInput.value = ""; // Clear the input
-                    loadHistory(); // Refresh the list immediately
-                } else {
-                    statusText.innerText = "Error saving to database.";
-                }
-            } catch (err) {
-                console.error("Submission error:", err);
-                statusText.innerText = "Connection failed.";
-            }
-        }
-        
-        // 2. Function to Load History from MongoDB
+        // 1. Platform Detection
+        const ua = navigator.userAgent;
+        const app = document.getElementById('mainApp');
+        if (/android/i.test(ua)) app.classList.add('platform-android');
+        else if (/iPhone|iPad|iPod/i.test(ua)) app.classList.add('platform-ios');
+
+        // 2. Load History on Start
         async function loadHistory() {
-            const historyList = document.getElementById('historyList');
-            
-            try {
-                const response = await fetch('/api/history');
-                const data = await response.json();
-        
-                if (data.length === 0) {
-                    historyList.innerHTML = "<p>No history yet. Be the first!</p>";
-                    return;
-                }
-        
-                // Create the HTML for the list
-                historyList.innerHTML = data.map(item => `
-                    <div style="background: #f4f4f4; padding: 10px; margin-bottom: 10px; border-radius: 8px; border-left: 5px solid #007bff;">
-                        <small style="color: #666;">${item.user || 'Anonymous'}</small>
-                        <p style="margin: 5px 0 0 0; font-weight: bold;">${item.prompt}</p>
-                    </div>
-                `).join('');
-        
-            } catch (err) {
-                console.error("Load error:", err);
-                historyList.innerHTML = "<p style='color:red;'>Could not load history.</p>";
-            }
+            const response = await fetch('/api/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    user: "User1", 
+                    prompt: document.getElementById('myInput').value 
+                })
+            });
+            const data = await res.json();
+            document.getElementById('historyList').innerHTML = "<h3>Previous Prompts</h3>" + 
+                data.map(h => `<div class="history-card"><b>${h.user}:</b> ${h.prompt}</div>`).join('');
         }
-        
-        // 3. Run loadHistory automatically when the page opens
+
+        // 3. Generate Logic
+        async function generateVideo() {
+            const user = document.getElementById('userName').value || "Guest";
+            const prompt = document.getElementById('promptInput').value;
+            const status = document.getElementById('status');
+            
+            status.style.display = 'block';
+
+            const res = await fetch('/api/generate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ user, prompt })
+            });
+
+            const result = await res.json();
+            status.innerText = "✅ Prompt Saved to MongoDB!";
+            loadHistory();
+        }
+
         window.onload = loadHistory;
     </script>
 </body>
 </html>
-
-
