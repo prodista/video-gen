@@ -63,7 +63,14 @@
 
         // 2. Load History on Start
         async function loadHistory() {
-            const res = await fetch('/api/history');
+            const response = await fetch('/api/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    user: "User1", 
+                    prompt: document.getElementById('myInput').value 
+                })
+            });
             const data = await res.json();
             document.getElementById('historyList').innerHTML = "<h3>Previous Prompts</h3>" + 
                 data.map(h => `<div class="history-card"><b>${h.user}:</b> ${h.prompt}</div>`).join('');
@@ -92,3 +99,4 @@
     </script>
 </body>
 </html>
+
