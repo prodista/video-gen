@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 마음 케어</title>
+    <title>불안 퇴치 서비스</title>
     <style>
         body { font-family: 'Pretendard', sans-serif; background-color: #f8f9fa; margin: 0; padding: 20px; }
         .container { max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
@@ -22,14 +22,14 @@
 
     <div class="container">
         <div id="onboarding-section">
-            <h2>반가워요! <br>당신에 대해 알려주세요.</h2>
+            <h2>불안 퇴치 서비스에 온 것을 환영해요!</h2>
             
-            <label>Participant ID #</label>
+            <label>ID</label>
             <input type="text" id="participantId" placeholder="ID를 입력하세요">
 
             <label>불안 요소 (여러 개 입력 가능)</label>
             <div style="display: flex;">
-                <input type="text" id="anxietyInput" placeholder="예: 학업 스트레스" style="flex: 1;">
+                <input type="text" id="anxietyInput" placeholder="예: 직장, 관계, 미래, 건강" style="flex: 1;">
                 <button type="button" class="add-btn" onclick="addAnxietyTag()">추가</button>
             </div>
             <div id="anxietyTagsContainer" class="tag-container"></div>
@@ -39,9 +39,9 @@
 
             <label>사용 목적</label>
             <select id="purpose">
-                <option value="care">마음 챙김 및 케어</option>
-                <option value="tracking">기분 트래킹</option>
-                <option value="video">영상 생성 체험</option>
+                <option value="care">감정 정리</option>
+                <option value="positive">미래를 긍정적으로 상상하기</option>
+                <option value="pattern">불안 패턴을 알고 싶어요</option>
             </select>
 
             <button id="submitBtn" onclick="submitOnboarding()">시작하기</button>
@@ -137,3 +137,4 @@
     </script>
 </body>
 </html>
+
