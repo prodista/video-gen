@@ -1,38 +1,24 @@
 import os
 from fastapi import FastAPI
 from pymongo import MongoClient
-import pymongo
 
 app = FastAPI()
 
-# 1. MAKE SURE THIS MATCHES YOUR VERCEL KEY EXACTLY
-uri = os.getenv("MONGODB_URI") 
-
 @app.get("/api/history")
 async def get_history():
-    # This will list the NAMES of the variables Vercel can see
-    # (It won't show the actual passwords for security)
-    visible_keys = list(os.environ.keys())
-    return {"visible_keys": visible_keys, "looking_for": "MONGODB_URI"}
+    # Calling it INSIDE the function forces Vercel to look for it NOW
+    uri = os.environ.get("MONGODB_URI") 
+    
+    if not uri:
+        return {"error": "Still missing. Check Vercel 'Production' checkbox."}
     
     try:
-        # 2. We add a timeout so it doesn't spin forever
-        client = MongoClient(uri, serverSelectionTimeoutMS=5000)
+        client = MongoClient(uri)
         db = client['video_gen']
-        history_col = db['history']
-        
-        # Test the connection immediately
-        client.admin.command('ping')
-        
-        data = list(history_col.find({}, {"_id": 0}).limit(10))
-        return data
-    
-    except pymongo.errors.ConfigurationError as e:
-        return {"error": f"Configuration Error: {str(e)}. Check your URI format."}
-    except pymongo.errors.OperationFailure as e:
-        return {"error": f"Auth Error: {str(e)}. Your MongoDB password or username is likely wrong."}
+        history = list(db.history.find({}, {"_id": 0}))
+        return history
     except Exception as e:
-        return {"error": f"General Error: {str(e)}"}
+        return {"error": str(e)}
 
 @app.post("/api/generate")
 async def save_prompt(data: dict):
@@ -43,5 +29,6 @@ async def save_prompt(data: dict):
         return {"status": "success"}
     except Exception as e:
         return {"error": str(e)}
+
 
 
