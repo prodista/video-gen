@@ -6,7 +6,7 @@ app = FastAPI()
 
 uri = os.getenv("MONGODB_URI")
 client = MongoClient(uri)
-db = client['ai_video_app']
+db = client['video_gen']
 history_col = db['history']
 
 @app.get("/api/history")
@@ -24,6 +24,7 @@ async def save_prompt(data: dict = Body(...)):
         "status": "pending"
     })
     return {"status": "success"}
+
 
 
 
