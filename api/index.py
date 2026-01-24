@@ -10,6 +10,17 @@ uri = os.environ.get("MONGODB_URI")
 client = MongoClient(uri)
 db = client['video_gen']
 
+@app.get("/api/user/{participant_id}")
+async def get_user(participant_id: str):
+    try:
+        user = db.users.find_one({"participantId": participant_id}, {"_id": 0})
+        if user:
+            return user
+        else:
+            return {"error": "User not found"}, 404
+    except Exception as e:
+        return {"error": str(e)}, 500
+
 @app.post("/api/onboarding")
 async def save_onboarding(data: dict):
     try:
@@ -38,3 +49,4 @@ async def get_history():
         return data
     except Exception as e:
         return {"error": str(e)}
+
