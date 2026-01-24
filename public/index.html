@@ -1,24 +1,134 @@
-<div id="onboarding-container" style="max-width: 400px; margin: auto; padding: 20px;">
-    <h2>환영합니다!</h2>
-    <p>당신을 더 잘 이해하기 위한 기초 정보입니다.</p>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 마음 케어 서비스</title>
+    <style>
+        body { font-family: 'Pretendard', sans-serif; background-color: #f8f9fa; margin: 0; padding: 20px; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .hidden { display: none; }
+        input, textarea, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #0056b3; }
+        .card { background: #f1f3f5; padding: 15px; border-radius: 10px; margin-top: 10px; border-left: 5px solid #007bff; }
+        h2 { color: #333; }
+        label { font-weight: bold; font-size: 14px; }
+    </style>
+</head>
+<body>
 
-    <label>Participant ID #</label>
-    <input type="text" id="participantId" placeholder="예: User_01" style="width:100%; margin-bottom:15px;">
+    <div class="container">
+        <div id="onboarding-section">
+            <h2>안녕하세요! <br>잠시 알아갈 시간이 필요해요.</h2>
+            <label>Participant ID #</label>
+            <input type="text" id="participantId" placeholder="예: User_01">
 
-    <label>요즘 나를 힘들게 하는 불안 요소</label>
-    <textarea id="anxietyFactor" placeholder="예: 업무 마감, 대인 관계 등" style="width:100%; margin-bottom:15px;"></textarea>
+            <label>요즘 나를 불안하게 하는 것</label>
+            <textarea id="anxietyFactor" placeholder="예: 업무 마감, 관계 고민 등"></textarea>
 
-    <label>초기 불안 수치 (1-10)</label>
-    <input type="range" id="initialAnxiety" min="1" max="10" style="width:100%;">
-    <span id="levelDisplay">5</span>
+            <label>현재 불안 수치: <span id="levelDisplay">5</span></label>
+            <input type="range" id="initialAnxiety" min="1" max="10" value="5">
 
-    <label style="margin-top:15px; display:block;">사용 목적</label>
-    <select id="purpose" style="width:100%; margin-bottom:20px;">
-        <option value="care">마음 챙김 및 케어</option>
-        <option value="tracking">기분 트래킹</option>
-        <option value="video">영상 생성 체험</option>
-    </select>
+            <label>사용 목적</label>
+            <select id="purpose">
+                <option value="care">마음 챙김 및 케어</option>
+                <option value="tracking">기분 트래킹</option>
+                <option value="video">영상 생성 체험</option>
+            </select>
 
-    <button onclick="submitOnboarding()" style="width:100%; padding:10px; background-color:#007bff; color:white; border:none; border-radius:5px;">시작하기</button>
-    <p id="onboardingStatus" style="color: blue;"></p>
-</div>
+            <button onclick="submitOnboarding()">시작하기</button>
+            <p id="onboardingStatus"></p>
+        </div>
+
+        <div id="dashboard-section" class="hidden">
+            <h2 id="welcomeMsg">반가워요!</h2>
+            <div class="card">
+                <p><strong>내 현재 상태</strong></p>
+                <p id="statusSummary">데이터를 불러오는 중...</p>
+            </div>
+            
+            <hr>
+            <h3>영상 생성 히스토리</h3>
+            <div id="historyList">
+                <p>생성된 영상이 아직 없습니다.</p>
+            </div>
+            <button onclick="location.reload()" style="background:#6c757d; margin-top:20px;">다시 온보딩하기</button>
+        </div>
+    </div>
+
+    <script>
+        // 슬라이더 수치 실시간 업데이트
+        document.getElementById('initialAnxiety').addEventListener('input', (e) => {
+            document.getElementById('levelDisplay').innerText = e.target.value;
+        });
+
+        // [POST] 온보딩 데이터 저장
+        async function submitOnboarding() {
+            const data = {
+                participantId: document.getElementById('participantId').value,
+                anxietyFactor: document.getElementById('anxietyFactor').value,
+                initialAnxiety: document.getElementById('initialAnxiety').value,
+                purpose: document.getElementById('purpose').value
+            };
+
+            if (!data.participantId) {
+                alert("ID를 입력해주세요!");
+                return;
+            }
+
+            const status = document.getElementById('onboardingStatus');
+            status.innerText = "저장 중...";
+
+            try {
+                const response = await fetch('/api/onboarding', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    showDashboard(data);
+                } else {
+                    status.innerText = "서버 오류가 발생했습니다.";
+                }
+            } catch (err) {
+                console.error(err);
+                status.innerText = "연결 실패.";
+            }
+        }
+
+        // 화면 전환: 온보딩 -> 대시보드
+        function showDashboard(userData) {
+            document.getElementById('onboarding-section').classList.add('hidden');
+            document.getElementById('dashboard-section').classList.remove('hidden');
+            
+            document.getElementById('welcomeMsg').innerText = `안녕하세요, ${userData.participantId}님!`;
+            document.getElementById('statusSummary').innerText = 
+                `불안 요소: ${userData.anxietyFactor}\n초기 수치: ${userData.initialAnxiety}`;
+            
+            loadHistory(); // 기존 영상 히스토리 불러오기
+        }
+
+        // [GET] 영상 히스토리 불러오기
+        async function loadHistory() {
+            const historyList = document.getElementById('historyList');
+            try {
+                const response = await fetch('/api/history');
+                const data = await response.json();
+
+                if (data.length > 0) {
+                    historyList.innerHTML = data.map(item => `
+                        <div class="card">
+                            <small>Prompt:</small>
+                            <p style="margin:5px 0 0 0;">${item.prompt}</p>
+                        </div>
+                    `).join('');
+                }
+            } catch (err) {
+                console.log("히스토리 로드 실패");
+            }
+        }
+    </script>
+</body>
+</html>
