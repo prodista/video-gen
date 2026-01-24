@@ -62,6 +62,73 @@
     </div>
 
     <script>
+
+        // 불안 요소들을 담을 배열
+        let anxietyList = [];
+        
+        // 태그 추가 함수
+        function addAnxietyTag() {
+            const input = document.getElementById('anxietyInput');
+            const value = input.value.trim();
+            
+            if (value && !anxietyList.includes(value)) {
+                anxietyList.push(value);
+                renderTags();
+                input.value = "";
+            }
+        }
+        
+        // 엔터 키로도 추가 가능하게 설정
+        document.getElementById('anxietyInput')?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addAnxietyTag();
+            }
+        });
+        
+        // 화면에 태그 그리기
+        function renderTags() {
+            const container = document.getElementById('anxietyTagsContainer');
+            container.innerHTML = anxietyList.map((tag, index) => `
+                <span style="background: #e9ecef; padding: 5px 10px; border-radius: 20px; font-size: 13px; display: flex; align-items: center; gap: 5px;">
+                    ${tag} 
+                    <b onclick="removeTag(${index})" style="cursor:pointer; color:red;">×</b>
+                </span>
+            `).join('');
+        }
+        
+        // 태그 삭제 기능
+        function removeTag(index) {
+            anxietyList.splice(index, 1);
+            renderTags();
+        }
+        
+        // [수정된] 데이터 전송 함수
+        async function submitOnboarding() {
+            const data = {
+                participantId: document.getElementById('participantId').value,
+                anxietyFactors: anxietyList, // 이제 배열로 전송됩니다!
+                initialAnxiety: document.getElementById('initialAnxiety').value,
+                purpose: document.getElementById('purpose').value
+            };
+        
+            if (!data.participantId || anxietyList.length === 0) {
+                alert("ID와 불안 요소를 최소 하나 이상 입력해주세요!");
+                return;
+            }
+            
+            // ... 기존 fetch 코드와 동일 (단, 데이터 전송 시 anxietyFactors 전송)
+            const response = await fetch('/api/onboarding', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            
+            if (response.ok) {
+                showDashboard(data);
+            }
+        }
+                
         // 슬라이더 수치 실시간 업데이트
         document.getElementById('initialAnxiety').addEventListener('input', (e) => {
             document.getElementById('levelDisplay').innerText = e.target.value;
@@ -136,5 +203,6 @@
     </script>
 </body>
 </html>
+
 
 
