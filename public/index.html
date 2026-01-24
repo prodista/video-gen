@@ -87,6 +87,48 @@
     </div>
 
     <script>
+
+        // 섹션 전환 공통 함수
+        function showSection(sectionId) {
+            document.getElementById('intro-section').classList.add('hidden');
+            document.getElementById('onboarding-section').classList.add('hidden');
+            document.getElementById('dashboard-section').classList.add('hidden');
+            
+            document.getElementById(sectionId).classList.remove('hidden');
+        }
+        
+        // 기존 유저 로그인 함수
+        async function loginUser() {
+            const pId = document.getElementById('loginId').value;
+            if (!pId) { alert("ID를 입력해주세요!"); return; }
+        
+            try {
+                const response = await fetch(`/api/user/${pId}`);
+                if (response.ok) {
+                    const userData = await response.json();
+                    // 기존에 저장된 데이터로 대시보드 세팅
+                    anxietyList = userData.anxietyFactors || [];
+                    document.getElementById('initialAnxiety').value = userData.initialAnxiety;
+                    
+                    showDashboard(userData); 
+                } else {
+                    alert("등록되지 않은 ID입니다. 신규 가입을 진행해주세요.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("로그인 중 오류가 발생했습니다.");
+            }
+        }
+        
+        // showDashboard 함수 수정 (기존 데이터와 UI 동기화)
+        function showDashboard(userData) {
+            showSection('dashboard-section');
+            document.getElementById('welcomeMsg').innerText = `다시 오셨군요, ${userData.participantId}님!`;
+            document.getElementById('summaryLevel').innerText = userData.initialAnxiety;
+            document.getElementById('summaryFactors').innerHTML = 
+                (userData.anxietyFactors || []).map(t => `<span class="tag">${t}</span>`).join('');
+        }
+        
         let anxietyList = [];
 
         // 태그 추가 로직
@@ -211,6 +253,7 @@
     </script>
 </body>
 </html>
+
 
 
 
