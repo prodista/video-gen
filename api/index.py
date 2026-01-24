@@ -15,9 +15,8 @@ async def save_onboarding(data: dict):
     try:
         user_data = {
             "participantId": data.get("participantId"),
-            "anxietyFactor": data.get("anxietyFactor"),
+            "anxietyFactors": data.get("anxietyFactors"), # 리스트 형태 그대로 저장됨
             "initialAnxiety": int(data.get("initialAnxiety")),
-            "purpose": data.get("purpose"),
             "timestamp": datetime.datetime.now()
         }
         db.users.insert_one(user_data)
@@ -43,6 +42,7 @@ async def save_prompt(data: dict):
         return {"status": "success"}
     except Exception as e:
         return {"error": str(e)}
+
 
 
 
