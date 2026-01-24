@@ -40,10 +40,12 @@
     <div class="app-container" id="mainApp">
         <h1>AI Video Generator</h1>
         
-        <input id="userName" type="text" placeholder="Your Name" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;">
+        <input id="promptInput" type="text" placeholder="Your Name" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;">
         <textarea id="promptInput" rows="3" placeholder="Describe the scene..."></textarea>
         
         <button onclick="generateVideo()">Create AI Video</button>
+        
+        <div id="statusText"></div>
 
         <div id="status" style="margin-top:15px; font-weight:bold; display:none;">🎥 AI is thinking...</div>
         
@@ -121,5 +123,6 @@
     </script>
 </body>
 </html>
+
 
 
