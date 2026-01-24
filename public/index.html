@@ -21,29 +21,20 @@
 </head>
     
 <body>
-    
     <div class="container">
         <div id="intro-section">
             <h2>반가워요!</h2>
             <p>불안 퇴치 서비스입니다.</p>
             <button onclick="showSection('onboarding-section')" style="background:#28a745;">처음 왔어요 (신규 유저)</button>
+            
             <div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px;">
                 <p>이미 이용한 적이 있나요?</p>
                 <input type="text" id="loginId" placeholder="기존 ID 입력">
                 <button onclick="loginUser()">내 기록 불러오기</button>
             </div>
         </div>
-    
-        <div id="onboarding-section" class="hidden">
-            <button id="submitBtn" onclick="submitOnboarding()">시작하기</button>
-        </div>
-    
-        <div id="dashboard-section" class="hidden">
-            </div>
-    </div>
 
-    <div class="container">
-        <div id="onboarding-section">
+        <div id="onboarding-section" class="hidden">
             <h2>불안 퇴치 서비스에 온 것을 환영해요!</h2>
             
             <label>ID</label>
@@ -85,9 +76,24 @@
                 <canvas id="anxietyChart" width="400" height="200"></canvas>
             </div>
         
-            <button onclick="location.reload()" style="background:#6c757d; margin-top:10px;">다시 설정하기</button>
+            <button onclick="location.reload()" style="background:#6c757d; margin-top:10px;">홈으로 가기</button>
         </div>
     </div>
+
+    <script>
+        function showSection(sectionId) {
+            // 모든 섹션을 숨김
+            document.getElementById('intro-section').classList.add('hidden');
+            document.getElementById('onboarding-section').classList.add('hidden');
+            document.getElementById('dashboard-section').classList.add('hidden');
+            
+            // 선택한 섹션만 보여줌
+            document.getElementById(sectionId).classList.remove('hidden');
+        }
+        
+        // ... (나머지 addAnxietyTag, loginUser, submitOnboarding 등의 함수들)
+    </script>
+</body>
 
     <script>
 
@@ -256,6 +262,7 @@
     </script>
 </body>
 </html>
+
 
 
 
