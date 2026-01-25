@@ -86,6 +86,26 @@
         font-size: 14px;
         white-space: nowrap; /* 글자가 줄바꿈되지 않게 */
     }
+
+    /* 가로 스크롤 썸네일 스타일 */
+        .thumb-placeholder {
+            min-width: 120px;
+            height: 160px;
+            background: #e9ecef;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #adb5bd;
+            font-size: 14px;
+            flex-shrink: 0; /* 크기 고정 */
+            border: 1px solid #dee2e6;
+        }
+    
+        /* 스크롤바 숨기기 (선택 사항) */
+        #recentVideos::-webkit-scrollbar {
+            display: none;
+        }
 </style>
 </head>
     
@@ -135,21 +155,47 @@
         </div>
 
         <div id="dashboard-section" class="hidden">
-            <h2 id="welcomeMsg">환영합니다!</h2>
-            <div class="card">
-                <p><strong>등록된 불안 요소:</strong></p>
-                <div id="summaryFactors" class="tag-container"></div>
-                <p><strong>오늘의 불안 지수:</strong> <span id="summaryLevel"></span></p>
+            <div style="margin-bottom: 30px;">
+                <h2 id="welcomeMsg" style="margin-bottom: 5px;">안녕하세요, 유저님!</h2>
+                <p style="color: #666; margin-top: 0;">오늘의 마음은 좀 어떠신가요?</p>
             </div>
         
-            <button onclick="toggleTracking()" style="background:#28a745; margin-top:10px;">📊 나의 변화 확인하기 (트래킹)</button>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+        
+            <div style="margin-bottom: 30px;">
+                <p style="font-weight: bold; margin-bottom: 10px;">🎥 최근 생성한 영상</p>
+                <div id="recentVideos" style="display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px;">
+                    <div class="thumb-placeholder">영상 1</div>
+                    <div class="thumb-placeholder">영상 2</div>
+                    <div class="thumb-placeholder">영상 3</div>
+                </div>
+            </div>
+        
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+        
+            <div class="card" style="background: #fdfdfd; border: 1px solid #f0f0f0;">
+                <p style="font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">📅 이번 주 요약</p>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: #666;">평균 불안 수치</span>
+                        <span id="avgAnxiety" style="font-weight: bold; color: #ff4d4f;">4.5</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: #666;">가장 많이 나온 키워드</span>
+                        <span id="topKeyword" style="font-weight: bold; color: #007bff;">#회사생활</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div style="margin-top: 25px;">
+                <button onclick="toggleTracking()" style="background:#28a745;">📊 나의 변화 확인하기 (트래킹)</button>
+                <button onclick="startConversation()" style="background:#ff7b00; margin-top:12px;">💬 오늘의 대화 시작하기</button>
+            </div>
         
             <div id="tracking-section" class="hidden" style="margin-top:20px;">
                 <h3>불안 수치 변화</h3>
                 <canvas id="anxietyChart" width="400" height="200"></canvas>
             </div>
-        
-            <button onclick="location.reload()" style="background:#6c757d; margin-top:10px;">홈으로 가기</button>
         </div>
     </div>
 
@@ -335,6 +381,7 @@
     </script>
 </body>
 </html>
+
 
 
 
