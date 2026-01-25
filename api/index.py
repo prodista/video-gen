@@ -13,13 +13,22 @@ db = client['video_gen']
 @app.get("/api/user/{participant_id}")
 async def get_user(participant_id: str):
     try:
+        # 데이터베이스에서 해당 ID 찾기
         user = db.users.find_one({"participantId": participant_id}, {"_id": 0})
+        
         if user:
+            # 몽고DB의 datetime 객체는 JSON으로 바로 안 넘어가므로 문자열로 변환 (중요!)
+            if "createdAt" in user:
+                user["createdAt"] = user["createdAt"].isoformat()
+            if "timestamp" in user:
+                user["timestamp"] = user["timestamp"].isoformat()
+                
             return user
         else:
-            return {"error": "User not found"}, 404
+            return JSONResponse(status_code=404, content={"error": "User not found"})
     except Exception as e:
-        return {"error": str(e)}, 500
+        print(f"Login Error: {e}") # 서버 터미널에서 에러 확인용
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
 @app.post("/api/onboarding")
 async def save_onboarding(data: dict):
@@ -49,4 +58,5 @@ async def get_history():
         return data
     except Exception as e:
         return {"error": str(e)}
+
 
