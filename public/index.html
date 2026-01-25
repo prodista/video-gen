@@ -5,19 +5,64 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <title>불안 퇴치 서비스</title>
-    <style>
-        body { font-family: 'Pretendard', sans-serif; background-color: #f8f9fa; margin: 0; padding: 20px; }
-        .container { max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .hidden { display: none; }
-        input, textarea, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .tag-container { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; min-height: 20px; }
-        .tag { background: #e9ecef; padding: 5px 12px; border-radius: 20px; font-size: 13px; display: flex; align-items: center; gap: 5px; border: 1px solid #dee2e6; }
-        .tag b { cursor: pointer; color: #ff4d4f; }
-        button { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; margin-top: 10px; }
-        button:hover { background: #0056b3; }
-        .add-btn { width: 80px; background: #6c757d; margin: 10px 0 10px 5px; }
-        .card { background: #f1f3f5; padding: 15px; border-radius: 10px; margin-top: 10px; }
-    </style>
+<style>
+    :root {
+        --primary-color: #007bff;
+        --bg-color: #f0f2f5;
+    }
+    body { 
+        font-family: 'Pretendard', sans-serif; 
+        background-color: #ccc; /* 배경은 어둡게 */
+        margin: 0; 
+        display: flex; 
+        justify-content: center; 
+    }
+    .container { 
+        width: 100%; 
+        max-width: 430px; /* 모바일 규격 */
+        min-height: 100vh; 
+        background: white; 
+        padding: 25px; 
+        box-shadow: 0 0 20px rgba(0,0,0,0.2); 
+        box-sizing: border-box;
+        position: relative;
+    }
+    .hidden { display: none; }
+    
+    /* 입력창 디자인 개선 */
+    input, textarea, select { 
+        width: 100%; 
+        padding: 14px; 
+        margin: 8px 0; 
+        border: 1px solid #ddd; 
+        border-radius: 12px; 
+        box-sizing: border-box; 
+        font-size: 16px; /* 모바일에서 줌 방지 */
+    }
+    
+    /* 버튼 디자인 개선 */
+    button { 
+        width: 100%; 
+        padding: 16px; 
+        background: var(--primary-color); 
+        color: white; 
+        border: none; 
+        border-radius: 12px; 
+        cursor: pointer; 
+        font-size: 16px; 
+        font-weight: bold;
+        margin-top: 10px;
+        transition: opacity 0.2s;
+    }
+    button:active { opacity: 0.7; } /* 클릭 시 피드백 */
+    
+    .tag-container { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+    .tag { background: #eef2ff; color: #444; padding: 6px 14px; border-radius: 20px; font-size: 14px; border: 1px solid #dbeafe; }
+    .card { background: #f8faff; padding: 20px; border-radius: 16px; margin-top: 15px; border: 1px solid #eef2ff; }
+    
+    /* 헤더 스타일 */
+    h2 { font-size: 24px; line-height: 1.4; margin-bottom: 20px; }
+</style>
 </head>
     
 <body>
@@ -262,6 +307,7 @@
     </script>
 </body>
 </html>
+
 
 
 
