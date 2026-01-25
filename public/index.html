@@ -62,6 +62,30 @@
     
     /* 헤더 스타일 */
     h2 { font-size: 24px; line-height: 1.4; margin-bottom: 20px; }
+
+    /* 입력창과 추가 버튼을 감싸는 컨테이너 */
+    .input-group {
+        display: flex;
+        align-items: center; /* 세로 중앙 정렬 */
+        gap: 8px; /* 입력창과 버튼 사이 간격 */
+        margin: 8px 0;
+    }
+    
+    /* 입력창: 가능한 모든 공간 차지 */
+    .input-group input {
+        flex: 1; 
+        margin: 0; /* 그룹 안에서는 마진 제거 */
+    }
+    
+    /* 추가 버튼: 딱딱한 느낌 대신 작고 세련되게 */
+    .add-btn {
+        width: auto !important; /* 전체 너비 해제 */
+        padding: 12px 18px !important; /* 적당한 여백 */
+        margin: 0 !important; /* 마진 제거 */
+        background: #6c757d;
+        font-size: 14px;
+        white-space: nowrap; /* 글자가 줄바꿈되지 않게 */
+    }
 </style>
 </head>
     
@@ -90,8 +114,8 @@
             <input type="text" id="participantId" placeholder="ID를 입력하세요">
 
             <label>불안 요소 (여러 개 입력 가능)</label>
-            <div style="display: flex;">
-                <input type="text" id="anxietyInput" placeholder="예: 직장, 관계, 미래, 건강" style="flex: 1;">
+            <div class="input-group">
+                <input type="text" id="anxietyInput" placeholder="예: 직장, 건강, 미래">
                 <button type="button" class="add-btn" onclick="addAnxietyTag()">추가</button>
             </div>
             <div id="anxietyTagsContainer" class="tag-container"></div>
@@ -311,6 +335,7 @@
     </script>
 </body>
 </html>
+
 
 
 
