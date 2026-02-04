@@ -127,6 +127,13 @@
             </div>
         </div>
 
+        <div id="survey-section">
+            <h2>처음이시군요!</h2>
+            <p>서비스를 이용하기 앞서 간단한 설문조사를 부탁할게요.</p>            
+            <button onclick="showSection('onboarding-section')" style="background:#28a745;">다음</button>
+            
+        </div>
+        
         <div id="onboarding-section" class="hidden">
             <h2>불안 퇴치 서비스에 온 것을 환영해요!</h2>
             
@@ -203,6 +210,7 @@
         function showSection(sectionId) {
             // 모든 섹션을 숨김
             document.getElementById('intro-section').classList.add('hidden');
+            document.getElementById('survey-section').classList.add('hidden');
             document.getElementById('onboarding-section').classList.add('hidden');
             document.getElementById('dashboard-section').classList.add('hidden');
             
@@ -219,6 +227,7 @@
         // 섹션 전환 공통 함수
         function showSection(sectionId) {
             document.getElementById('intro-section').classList.add('hidden');
+            document.getElementById('survey-section').classList.add('hidden');            
             document.getElementById('onboarding-section').classList.add('hidden');
             document.getElementById('dashboard-section').classList.add('hidden');
             
@@ -395,6 +404,7 @@
     </script>
 </body>
 </html>
+
 
 
 
