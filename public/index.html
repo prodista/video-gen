@@ -118,7 +118,7 @@
         <div id="intro-section">
             <h2>반가워요!</h2>
             <p>불안 퇴치 서비스입니다.</p>
-            <button onclick="startSurvey()" style="background:#28a745;">처음 왔어요 (신규 유저)</button>
+            <button onclick="goToSurveyIntro()" style="background:#28a745;">처음 왔어요 (신규 유저)</button>
             
             <div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px;">
                 <p>이미 이용한 적이 있나요?</p>
@@ -128,11 +128,19 @@
         </div>
 
         <div id="survey-section" class="hidden">
-            <div id="survey-container">
+            <div id="survey-intro">
+                <h2>처음이시군요!</h2>
+                <p style="color: #666; line-height: 1.6;">
+                    반갑습니다. 서비스를 시작하기 전에,<br>
+                    당신에 대해 조금 더 알고 싶어요.<br>
+                    잠시만 설문조사에 응해주시겠어요?
+                </p>
+                <button onclick="startActualQuestions()" style="background:#28a745; margin-top: 20px;">네, 좋아요!</button>
+            </div>
+        
+            <div id="survey-container" class="hidden">
                 </div>
         </div>
-        
-
         
         <div id="onboarding-section" class="hidden">
             <h2>불안 퇴치 서비스에 온 것을 환영해요!</h2>
@@ -224,7 +232,6 @@
 
     <script>
 
-        // 1. 섹션 전환 및 히스토리 기록 함수
         function showSection(sectionId, isBack = false) {
             // 모든 섹션 리스트
             const sections = ['intro-section', 'survey-section', 'onboarding-section', 'dashboard-section'];
@@ -247,7 +254,6 @@
             }
         }
         
-        // 2. 브라우저의 뒤로 가기/앞으로 가기 버튼 감지 (popstate)
         window.onpopstate = function(event) {
             if (event.state && event.state.sectionId) {
                 // 기록된 섹션으로 이동 (추가 기록 방지를 위해 isBack을 true로 설정)
@@ -258,7 +264,6 @@
             }
         };
         
-        // 3. 페이지가 처음 로드될 때 설정
         window.onload = function() {
             // 주소창에 #survey-section 등이 남아있다면 해당 섹션으로 바로 이동
             const hash = window.location.hash.replace('#', '');
@@ -270,7 +275,6 @@
             }
         };
         
-        // 기존 유저 로그인 함수
         async function loginUser() {
             const pId = document.getElementById('loginId').value;
             if (!pId) { alert("ID를 입력해주세요!"); return; }
@@ -307,7 +311,6 @@
             }
         }
         
-        // showDashboard 함수 수정 (기존 데이터와 UI 동기화)
         function showDashboard(userData) {
             showSection('dashboard-section');
             document.getElementById('welcomeMsg').innerText = `다시 오셨군요, ${userData.participantId}님!`;
@@ -316,7 +319,6 @@
                 (userData.anxietyFactors || []).map(t => `<span class="tag">${t}</span>`).join('');
         }
 
-        // 1. 설문 데이터 (질문을 마음껏 추가하세요)
         const surveyQuestions = [
             {
                 question: "요즘 잠은 잘 주무시나요?",
@@ -334,39 +336,48 @@
         
         let currentQuestionIndex = 0; // 현재 질문 번호
         
-        // 2. 질문을 화면에 그리는 함수
+        function goToSurveyIntro() {
+            showSection('survey-section'); // 설문 섹션으로 이동
+            document.getElementById('survey-intro').classList.remove('hidden'); // 안내문 보이기
+            document.getElementById('survey-container').classList.add('hidden'); // 질문창 숨기기
+        }
+        
+        function startActualQuestions() {
+            document.getElementById('survey-intro').classList.add('hidden'); // 안내문 숨기기
+            document.getElementById('survey-container').classList.remove('hidden'); // 질문창 보이기
+            currentQuestionIndex = 0; // 질문 번호 초기화
+            renderSurvey(); // 첫 번째 질문 렌더링
+        }
+        
         function renderSurvey() {
             const container = document.getElementById('survey-container');
             const currentData = surveyQuestions[currentQuestionIndex];
         
-            // 마지막 질문까지 끝났다면 온보딩으로 이동
             if (currentQuestionIndex >= surveyQuestions.length) {
-                showSection('onboarding-section');
+                showSection('onboarding-section'); // 모든 질문 끝나면 온보딩으로
                 return;
             }
         
             container.innerHTML = `
-                <h2>질문 ${currentQuestionIndex + 1}</h2>
-                <p style="font-size: 18px; margin-bottom: 20px;">${currentData.question}</p>
-                ${currentData.options.map((opt, i) => `
-                    <button onclick="nextSurvey('${opt}')" style="background: white; color: black; border: 1px solid #ddd; margin-bottom: 10px;">
+                <h3 style="color: var(--primary-color);">Q${currentQuestionIndex + 1}.</h3>
+                <p style="font-size: 18px; font-weight: bold; margin-bottom: 25px;">${currentData.question}</p>
+                ${currentData.options.map(opt => `
+                    <button onclick="nextSurvey('${opt}')" style="background: white; color: #333; border: 1px solid #ddd; margin-bottom: 12px; text-align: left; padding-left: 20px;">
                         ${opt}
                     </button>
                 `).join('')}
-                <p style="text-align:center; color:#999; font-size:12px; margin-top:20px;">
+                <div style="text-align:center; color:#ccc; font-size:12px; margin-top:20px;">
                     ${currentQuestionIndex + 1} / ${surveyQuestions.length}
-                </p>
+                </div>
             `;
-        }
+        }  
         
-        // 3. 답변 선택 시 호출되는 함수
         function nextSurvey(answer) {
             console.log(`사용자 답변: ${answer}`); // 나중에 DB에 저장 가능
             currentQuestionIndex++;
             renderSurvey();
         }
         
-        // 기존 showSection 함수를 조금 수정해야 합니다
         function startSurvey() {
             currentQuestionIndex = 0; // 초기화
             showSection('survey-section');
@@ -375,7 +386,6 @@
         
         let anxietyList = [];
 
-        // 태그 추가 로직
         function addAnxietyTag() {
             const input = document.getElementById('anxietyInput');
             const val = input.value.trim();
@@ -408,7 +418,6 @@
             if (e.key === 'Enter') addAnxietyTag();
         });
 
-        // [핵심] 데이터 전송 및 화면 전환
         async function submitOnboarding() {
             const pId = document.getElementById('participantId').value;
             const level = document.getElementById('initialAnxiety').value;
@@ -497,6 +506,7 @@
     </script>
 </body>
 </html>
+
 
 
 
