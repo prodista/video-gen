@@ -118,7 +118,7 @@
         <div id="intro-section">
             <h2>반가워요!</h2>
             <p>불안 퇴치 서비스입니다.</p>
-            <button onclick="showSection('survey-section')" style="background:#28a745;">처음 왔어요 (신규 유저)</button>
+            <button onclick="startSurvey()" style="background:#28a745;">처음 왔어요 (신규 유저)</button>
             
             <div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px;">
                 <p>이미 이용한 적이 있나요?</p>
@@ -128,11 +128,11 @@
         </div>
 
         <div id="survey-section" class="hidden">
-            <h2>처음이시군요!</h2>
-            <p>서비스를 이용하기 앞서 간단한 설문조사를 부탁할게요.</p>            
-            <button onclick="showSection('onboarding-section')" style="background:#28a745;">다음</button>
-            
+            <div id="survey-container">
+                </div>
         </div>
+        
+
         
         <div id="onboarding-section" class="hidden">
             <h2>불안 퇴치 서비스에 온 것을 환영해요!</h2>
@@ -315,6 +315,63 @@
             document.getElementById('summaryFactors').innerHTML = 
                 (userData.anxietyFactors || []).map(t => `<span class="tag">${t}</span>`).join('');
         }
+
+        // 1. 설문 데이터 (질문을 마음껏 추가하세요)
+        const surveyQuestions = [
+            {
+                question: "요즘 잠은 잘 주무시나요?",
+                options: ["매우 잘 잠", "보통", "자주 깨거나 못 잠"]
+            },
+            {
+                question: "하루 중 가장 불안한 시간대는?",
+                options: ["아침", "오후", "밤/자기 전"]
+            },
+            {
+                question: "불안할 때 몸에 나타나는 증상은?",
+                options: ["두근거림", "호흡 곤란", "근육 긴장", "없음"]
+            }
+        ];
+        
+        let currentQuestionIndex = 0; // 현재 질문 번호
+        
+        // 2. 질문을 화면에 그리는 함수
+        function renderSurvey() {
+            const container = document.getElementById('survey-container');
+            const currentData = surveyQuestions[currentQuestionIndex];
+        
+            // 마지막 질문까지 끝났다면 온보딩으로 이동
+            if (currentQuestionIndex >= surveyQuestions.length) {
+                showSection('onboarding-section');
+                return;
+            }
+        
+            container.innerHTML = `
+                <h2>질문 ${currentQuestionIndex + 1}</h2>
+                <p style="font-size: 18px; margin-bottom: 20px;">${currentData.question}</p>
+                ${currentData.options.map((opt, i) => `
+                    <button onclick="nextSurvey('${opt}')" style="background: white; color: black; border: 1px solid #ddd; margin-bottom: 10px;">
+                        ${opt}
+                    </button>
+                `).join('')}
+                <p style="text-align:center; color:#999; font-size:12px; margin-top:20px;">
+                    ${currentQuestionIndex + 1} / ${surveyQuestions.length}
+                </p>
+            `;
+        }
+        
+        // 3. 답변 선택 시 호출되는 함수
+        function nextSurvey(answer) {
+            console.log(`사용자 답변: ${answer}`); // 나중에 DB에 저장 가능
+            currentQuestionIndex++;
+            renderSurvey();
+        }
+        
+        // 기존 showSection 함수를 조금 수정해야 합니다
+        function startSurvey() {
+            currentQuestionIndex = 0; // 초기화
+            showSection('survey-section');
+            renderSurvey();
+        }        
         
         let anxietyList = [];
 
@@ -440,6 +497,7 @@
     </script>
 </body>
 </html>
+
 
 
 
