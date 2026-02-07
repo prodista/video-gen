@@ -70,6 +70,29 @@
             color: var(--primary-color) !important;
             font-weight: bold;
         }
+
+        .bot-msg, .user-msg {
+            max-width: 85%;
+            padding: 12px 16px;
+            font-size: 14px;
+            line-height: 1.5;
+            word-break: break-all;
+        }
+        
+        .bot-msg {
+            background: #eef2ff;
+            color: #333;
+            border-radius: 18px 18px 18px 0;
+            align-self: flex-start;
+        }
+        
+        .user-msg {
+            background: var(--primary-color);
+            color: white;
+            border-radius: 18px 18px 0 18px;
+            align-self: flex-end;
+        }
+        
     </style>
 </head>
 <body>
@@ -145,7 +168,10 @@
                     <div class="thumb-placeholder">기록 없음</div>
                 </div>
             </div>
-            <button onclick="toggleTracking()" style="background:#28a745; margin-top:20px;">📊 변화 그래프 보기</button>
+            <div style="margin-top: 25px;">
+                <button onclick="toggleTracking()" style="background:#28a745;">📊 나의 변화 확인하기 (트래킹)</button>
+                <button onclick="startConversation()" style="background:#ff7b00; margin-top:12px;">💬 오늘의 대화 시작하기</button>
+            </div>
             <div id="tracking-section" class="hidden" style="margin-top:20px;">
                 <canvas id="anxietyChart"></canvas>
             </div>
@@ -189,12 +215,24 @@
             { question: "불안할 때 나타나는 증상은?", options: ["두근거림", "호흡 곤란", "근육 긴장", "없음"] }
         ];
 
-        // --- 섹션 관리 ---
         function showSection(sectionId, isBack = false) {
-            const sections = ['intro-section', 'survey-section', 'onboarding-section', 'dashboard-section'];
-            sections.forEach(id => document.getElementById(id).classList.add('hidden'));
-            document.getElementById(sectionId).classList.remove('hidden');
-            if (!isBack) history.pushState({ sectionId }, '', `#${sectionId}`);
+            const sections = ['intro-section', 'survey-section', 'onboarding-section', 'dashboard-section', 'chat-section'];
+            
+            sections.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+        
+            const target = document.getElementById(sectionId);
+            if (target) {
+                target.classList.remove('hidden');
+            } else {
+                console.error("섹션을 찾을 수 없습니다:", sectionId);
+            }
+        
+            if (!isBack) {
+                history.pushState({ sectionId: sectionId }, '', `#${sectionId}`);
+            }
         }
 
         function goHome() {
@@ -358,7 +396,14 @@
 
         // 1. 대화 시작 함수
         function startConversation() {
+            console.log("대화 시작!"); // 디버깅용
             showSection('chat-section');
+            
+            // 채팅창 진입 시 초기 메시지 세팅 (선택 사항)
+            const chatWindow = document.getElementById('chat-window');
+            if (chatWindow.children.length <= 1) { // 메시지가 초기 메시지 하나뿐이라면
+                // 추가 로직 필요 시 여기에 작성
+            }
         }
         
         // 2. 메시지 전송 함수
@@ -417,5 +462,6 @@
     </script>
 </body>
 </html>
+
 
 
