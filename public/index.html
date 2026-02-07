@@ -5,137 +5,78 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <title>Anxiety Eliminator</title>
-<style>
-        /* 상단 홈 버튼 스타일 */
-    .home-link {
-        padding: 5px 10px;
-        border-radius: 8px;
-        transition: background 0.2s;
-    }
-    .home-link:hover {
-        background: #f0f0f0;
-    }
-
-    :root {
-        --primary-color: #007bff;
-        --bg-color: #f0f2f5;
-    }
-    body { 
-        font-family: 'Pretendard', sans-serif; 
-        background-color: #ccc; /* 배경은 어둡게 */
-        margin: 0; 
-        display: flex; 
-        justify-content: center; 
-    }
-    .container { 
-        width: 100%; 
-        max-width: 430px; /* 모바일 규격 */
-        min-height: 100vh; 
-        background: white; 
-        padding: 25px; 
-        box-shadow: 0 0 20px rgba(0,0,0,0.2); 
-        box-sizing: border-box;
-        position: relative;
-    }
-    .hidden { display: none; }
-    
-    /* 입력창 디자인 개선 */
-    input, textarea, select { 
-        width: 100%; 
-        padding: 14px; 
-        margin: 8px 0; 
-        border: 1px solid #ddd; 
-        border-radius: 12px; 
-        box-sizing: border-box; 
-        font-size: 16px; /* 모바일에서 줌 방지 */
-    }
-    
-    /* 버튼 디자인 개선 */
-    button { 
-        width: 100%; 
-        padding: 16px; 
-        background: var(--primary-color); 
-        color: white; 
-        border: none; 
-        border-radius: 12px; 
-        cursor: pointer; 
-        font-size: 16px; 
-        font-weight: bold;
-        margin-top: 10px;
-        transition: opacity 0.2s;
-    }
-    button:active { opacity: 0.7; } /* 클릭 시 피드백 */
-    
-    .tag-container { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
-    .tag { background: #eef2ff; color: #444; padding: 6px 14px; border-radius: 20px; font-size: 14px; border: 1px solid #dbeafe; }
-    .card { background: #f8faff; padding: 20px; border-radius: 16px; margin-top: 15px; border: 1px solid #eef2ff; }
-    
-    /* 헤더 스타일 */
-    h2 { font-size: 24px; line-height: 1.4; margin-bottom: 20px; }
-
-    /* 입력창과 추가 버튼을 감싸는 컨테이너 */
-    .input-group {
-        display: flex;
-        align-items: center; /* 세로 중앙 정렬 */
-        gap: 8px; /* 입력창과 버튼 사이 간격 */
-        margin: 8px 0;
-    }
-    
-    /* 입력창: 가능한 모든 공간 차지 */
-    .input-group input {
-        flex: 1; 
-        margin: 0; /* 그룹 안에서는 마진 제거 */
-    }
-    
-    /* 추가 버튼: 딱딱한 느낌 대신 작고 세련되게 */
-    .add-btn {
-        width: auto !important; /* 전체 너비 해제 */
-        padding: 12px 18px !important; /* 적당한 여백 */
-        margin: 0 !important; /* 마진 제거 */
-        background: #6c757d;
-        font-size: 14px;
-        white-space: nowrap; /* 글자가 줄바꿈되지 않게 */
-    }
-
-    /* 가로 스크롤 썸네일 스타일 */
-        .thumb-placeholder {
-            min-width: 100px;
-            height: 75px;
-            background: #e9ecef;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #adb5bd;
-            font-size: 14px;
-            flex-shrink: 0; /* 크기 고정 */
-            border: 1px solid #dee2e6;
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --bg-color: #f0f2f5;
         }
-    
-        /* 스크롤바 숨기기 (선택 사항) */
-        #recentVideos::-webkit-scrollbar {
-            display: none;
+        body { 
+            font-family: 'Pretendard', sans-serif; 
+            background-color: #ccc; 
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+        }
+        .container { 
+            width: 100%; 
+            max-width: 430px; 
+            min-height: 100vh; 
+            background: white; 
+            padding: 25px; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.2); 
+            box-sizing: border-box;
+            position: relative;
+        }
+        .hidden { display: none !important; }
+        
+        /* 홈 링크 스타일 */
+        .home-link {
+            cursor: pointer;
+            font-weight: bold;
+            color: #888;
+            font-size: 14px;
+            padding: 5px 10px;
+            border-radius: 8px;
+            transition: background 0.2s;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        .home-link:hover { background: #f0f0f0; color: var(--primary-color); }
+
+        input, textarea, select { 
+            width: 100%; padding: 14px; margin: 8px 0; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; font-size: 16px;
+        }
+        button { 
+            width: 100%; padding: 16px; background: var(--primary-color); color: white; border: none; border-radius: 12px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; transition: opacity 0.2s;
+        }
+        button:active { opacity: 0.7; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        
+        .tag-container { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+        .tag { background: #eef2ff; color: #444; padding: 6px 14px; border-radius: 20px; font-size: 14px; border: 1px solid #dbeafe; }
+        .card { background: #f8faff; padding: 20px; border-radius: 16px; margin-top: 15px; border: 1px solid #eef2ff; }
+        
+        .input-group { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
+        .input-group input { flex: 1; margin: 0; }
+        .add-btn { width: auto !important; padding: 12px 18px !important; margin: 0 !important; background: #6c757d; font-size: 14px; }
+
+        .thumb-placeholder {
+            min-width: 100px; height: 75px; background: #e9ecef; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #adb5bd; font-size: 12px; flex-shrink: 0; border: 1px solid #dee2e6;
         }
 
         .survey-option.selected {
-        border: 2px solid var(--primary-color) !important;
-        background-color: #eef2ff !important;
-        color: var(--primary-color) !important;
-        font-weight: bold;
-    }
-    
-</style>
+            border: 2px solid var(--primary-color) !important;
+            background-color: #eef2ff !important;
+            color: var(--primary-color) !important;
+            font-weight: bold;
+        }
+    </style>
 </head>
-    
 <body>
     <div class="container">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <div onclick="goHome()" style="cursor: pointer; font-weight: bold; color: #888; font-size: 14px;">
-                🏠 Anxiety Eliminator
-            </div>
-            </div>
+        <div class="home-link" onclick="goHome()">🏠 Anxiety Eliminator</div>
 
-    <div id="intro-section"> ... </div>
+        <div id="intro-section">
             <h2>반가워요!</h2>
             <p>불안 퇴치 서비스입니다.</p>
             <button onclick="goToSurveyIntro()" style="background:#28a745;">처음 왔어요 (신규 유저)</button>
@@ -153,28 +94,26 @@
                 <p style="color: #666; line-height: 1.6;">
                     반갑습니다. 서비스를 시작하기 전에,<br>
                     당신에 대해 조금 더 알고 싶어요.<br>
-                    5분만 설문조사에 응해주시겠어요?
+                    잠시 설문조사에 응해주시겠어요?
                 </p>
                 <button onclick="startActualQuestions()" style="background:#28a745; margin-top: 20px;">네, 좋아요!</button>
             </div>
         
             <div id="survey-container" class="hidden">
                 <div id="survey-content"></div>
-    
                 <div class="input-group" style="margin-top: 30px;">
-                    <button id="prevBtn" onclick="prevSurvey()" style="background: #6c757d; flex: 1;">이전</button>
-                    <button id="nextBtn" onclick="nextSurvey()" style="background: #007bff; flex: 1;" disabled>다음</button>
+                    <button id="prevBtn" style="background: #6c757d; flex: 1;">이전</button>
+                    <button id="nextBtn" style="background: #007bff; flex: 1;">다음</button>
                 </div>
             </div>
         </div>
         
         <div id="onboarding-section" class="hidden">
-            <h2>불안 퇴치 서비스에 온 것을 환영해요!</h2>
-            
-            <label>ID</label>
-            <input type="text" id="participantId" placeholder="ID를 입력하세요">
+            <h2>거의 다 됐어요!</h2>
+            <label>ID 설정</label>
+            <input type="text" id="participantId" placeholder="사용하실 ID를 입력하세요">
 
-            <label>불안 요소 (여러 개 입력 가능)</label>
+            <label>불안 요소 (추가 버튼을 눌러주세요)</label>
             <div class="input-group">
                 <input type="text" id="anxietyInput" placeholder="예: 직장, 건강, 미래">
                 <button type="button" class="add-btn" onclick="addAnxietyTag()">추가</button>
@@ -188,193 +127,106 @@
             <select id="purpose">
                 <option value="care">감정 정리</option>
                 <option value="positive">미래를 긍정적으로 상상하기</option>
-                <option value="pattern">불안 패턴을 알고 싶어요</option>
+                <option value="pattern">불안 패턴 파악</option>
             </select>
 
-            <button id="submitBtn" onclick="submitOnboarding()">시작하기</button>
-            <p id="onboardingStatus" style="text-align: center; color: #007bff;"></p>
+            <button onclick="submitOnboarding()">시작하기</button>
         </div>
 
         <div id="dashboard-section" class="hidden">
-            <div style="margin-bottom: 30px;">
-                <h2 id="welcomeMsg" style="margin-bottom: 5px;">안녕하세요, 유저님!</h2>
-                <p style="color: #666; margin-top: 0;">오늘의 마음은 좀 어떠신가요?</p>
+            <h2 id="welcomeMsg">안녕하세요!</h2>
+            <div class="card">
+                <p>📊 평균 불안 수치: <span id="avgAnxiety" style="font-weight:bold; color:red;">-</span></p>
+                <p>🏷 주요 키워드: <span id="topKeyword" style="font-weight:bold; color:blue;">-</span></p>
             </div>
-        
-            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-        
-            <div style="margin-bottom: 30px;">
-                <p style="font-weight: bold; margin-bottom: 10px;">🎥 최근 생성한 영상</p>
-                <div id="recentVideos" style="display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px;">
-                    <div class="thumb-placeholder">영상 1</div>
-                    <div class="thumb-placeholder">영상 2</div>
-                    <div class="thumb-placeholder">영상 3</div>
+            <div style="margin-top: 20px;">
+                <p style="font-weight: bold;">🎥 최근 영상</p>
+                <div id="recentVideos" style="display: flex; gap: 10px; overflow-x: auto;">
+                    <div class="thumb-placeholder">기록 없음</div>
                 </div>
             </div>
-        
-            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-        
-            <div class="card" style="background: #fdfdfd; border: 1px solid #f0f0f0;">
-                <p style="font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">📅 이번 주 요약</p>
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="color: #666;">평균 불안 수치</span>
-                        <span id="avgAnxiety" style="font-weight: bold; color: #ff4d4f;">4.5</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="color: #666;">가장 많이 나온 키워드</span>
-                        <span id="topKeyword" style="font-weight: bold; color: #007bff;">#회사생활</span>
-                    </div>
-                </div>
-            </div>
-        
-            <div style="margin-top: 25px;">
-                <button onclick="toggleTracking()" style="background:#28a745;">📊 나의 변화 확인하기 (트래킹)</button>
-                <button onclick="startConversation()" style="background:#ff7b00; margin-top:12px;">💬 오늘의 대화 시작하기</button>
-            </div>
-        
+            <button onclick="toggleTracking()" style="background:#28a745; margin-top:20px;">📊 변화 그래프 보기</button>
             <div id="tracking-section" class="hidden" style="margin-top:20px;">
-                <h3>불안 수치 변화</h3>
-                <canvas id="anxietyChart" width="400" height="200"></canvas>
+                <canvas id="anxietyChart"></canvas>
             </div>
         </div>
     </div>
 
     <script>
-        function showSection(sectionId) {
-            // 모든 섹션을 숨김
-            document.getElementById('intro-section').classList.add('hidden');
-            document.getElementById('survey-section').classList.add('hidden');
-            document.getElementById('onboarding-section').classList.add('hidden');
-            document.getElementById('dashboard-section').classList.add('hidden');
-            
-            // 선택한 섹션만 보여줌
-            document.getElementById(sectionId).classList.remove('hidden');
-        }
-        
-        // ... (나머지 addAnxietyTag, loginUser, submitOnboarding 등의 함수들)
-    </script>
-</body>
-
-    <script>
-
-        // 어느 페이지에서든 인트로로 돌아가는 함수
-        function goHome() {
-            if (confirm("처음 화면으로 돌아가시겠습니까? (진행 중인 내용은 저장되지 않을 수 있습니다)")) {
-                // 설문 데이터 초기화 (필요 시)
-                currentQuestionIndex = 0;
-                userAnswers = [];
-                
-                // 인트로 섹션으로 이동
-                showSection('intro-section');
-            }
-        }
-        
-        // --- 1. 전역 변수 설정 (중복 선언 방지) ---
+        // --- 전역 변수 ---
         let currentQuestionIndex = 0;
         let userAnswers = [];
         let anxietyList = [];
         let myChart = null;
-        
-        // 설문 데이터
+
         const surveyQuestions = [
-            {
-                question: "요즘 잠은 잘 주무시나요?",
-                options: ["매우 잘 잠", "보통", "자주 깨거나 못 잠"]
-            },
-            {
-                question: "하루 중 가장 불안한 시간대는?",
-                options: ["아침", "오후", "밤/자기 전"]
-            },
-            {
-                question: "불안할 때 몸에 나타나는 증상은?",
-                options: ["두근거림", "호흡 곤란", "근육 긴장", "없음"]
-            }
+            { question: "요즘 잠은 잘 주무시나요?", options: ["매우 잘 잠", "보통", "자주 깨거나 못 잠"] },
+            { question: "하루 중 가장 불안한 시간대는?", options: ["아침", "오후", "밤/자기 전"] },
+            { question: "불안할 때 나타나는 증상은?", options: ["두근거림", "호흡 곤란", "근육 긴장", "없음"] }
         ];
-        
-        // --- 2. 섹션 전환 및 히스토리 관리 ---
+
+        // --- 섹션 관리 ---
         function showSection(sectionId, isBack = false) {
             const sections = ['intro-section', 'survey-section', 'onboarding-section', 'dashboard-section'];
-            
-            sections.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.classList.add('hidden');
-            });
-        
-            const target = document.getElementById(sectionId);
-            if (target) target.classList.remove('hidden');
-        
-            if (!isBack) {
-                history.pushState({ sectionId: sectionId }, '', `#${sectionId}`);
+            sections.forEach(id => document.getElementById(id).classList.add('hidden'));
+            document.getElementById(sectionId).classList.remove('hidden');
+            if (!isBack) history.pushState({ sectionId }, '', `#${sectionId}`);
+        }
+
+        function goHome() {
+            if (confirm("처음 화면으로 돌아가시겠습니까?")) {
+                currentQuestionIndex = 0;
+                userAnswers = [];
+                showSection('intro-section');
             }
         }
-        
-        window.onpopstate = function(event) {
-            if (event.state && event.state.sectionId) {
-                showSection(event.state.sectionId, true);
-            } else {
-                showSection('intro-section', true);
-            }
-        };
-        
-        window.onload = function() {
-            const hash = window.location.hash.replace('#', '');
-            if (hash) {
-                showSection(hash);
-            } else {
-                history.replaceState({ sectionId: 'intro-section' }, '', '');
-            }
-        };
-        
-        // --- 3. 설문조사 로직 (인트로/진행/이동) ---
-        
-        // [처음 왔어요] 버튼 클릭 시
+
+        window.onpopstate = (e) => showSection(e.state?.sectionId || 'intro-section', true);
+
+        // --- 설문 로직 ---
         function goToSurveyIntro() {
             showSection('survey-section');
             document.getElementById('survey-intro').classList.remove('hidden');
             document.getElementById('survey-container').classList.add('hidden');
         }
-        
-        // [네, 좋아요!] 버튼 클릭 시
+
         function startActualQuestions() {
             document.getElementById('survey-intro').classList.add('hidden');
             document.getElementById('survey-container').classList.remove('hidden');
-            currentQuestionIndex = 0;
-            userAnswers = []; // 답변 초기화
             renderSurvey();
         }
-        
+
         function renderSurvey() {
             const content = document.getElementById('survey-content');
             const nextBtn = document.getElementById('nextBtn');
             const prevBtn = document.getElementById('prevBtn');
-            const currentData = surveyQuestions[currentQuestionIndex];
-        
+            const data = surveyQuestions[currentQuestionIndex];
+
             content.innerHTML = `
-                <h3 style="color: var(--primary-color);">Q${currentQuestionIndex + 1}.</h3>
-                <p style="font-size: 18px; font-weight: bold; margin-bottom: 25px;">${currentData.question}</p>
-                <div id="options-list">
-                    ${currentData.options.map((opt) => `
-                        <button class="survey-option ${userAnswers[currentQuestionIndex] === opt ? 'selected' : ''}" 
-                                onclick="selectOption('${opt}')" 
-                                style="background: white; color: #333; border: 1px solid #ddd; margin-bottom: 12px; text-align: left; padding-left: 20px; width: 100%;">
-                            ${opt}
-                        </button>
-                    `).join('')}
-                </div>
+                <h3>Q${currentQuestionIndex + 1}.</h3>
+                <p style="font-weight:bold;">${data.question}</p>
+                ${data.options.map(opt => `
+                    <button class="survey-option ${userAnswers[currentQuestionIndex] === opt ? 'selected' : ''}" 
+                            onclick="selectOption('${opt}')" style="background:white; color:#333; border:1px solid #ddd; text-align:left;">
+                        ${opt}
+                    </button>
+                `).join('')}
             `;
-        
-            // 버튼 상태 제어
-            prevBtn.style.visibility = currentQuestionIndex === 0 ? 'hidden' : 'visible';
+
+            // 이전 버튼: 첫 질문이면 goHome으로 연결
+            prevBtn.innerText = currentQuestionIndex === 0 ? "처음으로" : "이전";
+            prevBtn.onclick = currentQuestionIndex === 0 ? goHome : prevSurvey;
+            
             nextBtn.disabled = !userAnswers[currentQuestionIndex];
             nextBtn.innerText = currentQuestionIndex === surveyQuestions.length - 1 ? "완료" : "다음";
+            nextBtn.onclick = nextSurvey;
         }
-        
-        function selectOption(answer) {
-            userAnswers[currentQuestionIndex] = answer;
+
+        function selectOption(opt) {
+            userAnswers[currentQuestionIndex] = opt;
             renderSurvey();
         }
-        
+
         function nextSurvey() {
             if (currentQuestionIndex < surveyQuestions.length - 1) {
                 currentQuestionIndex++;
@@ -383,155 +235,66 @@
                 showSection('onboarding-section');
             }
         }
-        
+
         function prevSurvey() {
             if (currentQuestionIndex > 0) {
                 currentQuestionIndex--;
                 renderSurvey();
-            } else {
-                showSection('intro-section');
             }
         }
-        
-        // --- 4. 로그인 및 온보딩 처리 ---
-        
-        async function loginUser() {
-            const pId = document.getElementById('loginId').value;
-            if (!pId) { alert("ID를 입력해주세요!"); return; }
-            try {
-                const response = await fetch(`/api/user/${pId}`);
-                const userData = await response.json();
-                if (response.ok) {
-                    anxietyList = userData.anxietyFactors || [];
-                    showSection('dashboard-section');
-                    document.getElementById('welcomeMsg').innerText = `안녕하세요, ${userData.participantId}님!`;
-                    document.getElementById('avgAnxiety').innerText = userData.initialAnxiety || "5";
-                    const keywordDisplay = document.getElementById('topKeyword');
-                    if (anxietyList.length > 0) keywordDisplay.innerText = `#${anxietyList[0]}`;
-                } else {
-                    alert("등록되지 않은 ID입니다.");
-                }
-            } catch (err) {
-                alert("서버 연결 오류");
-            }
-        }
-        
-        async function submitOnboarding() {
-            const pId = document.getElementById('participantId').value;
-            const level = document.getElementById('initialAnxiety').value;
-            const purpose = document.getElementById('purpose').value;
-        
-            if (!pId) { alert("ID를 입력해주세요!"); return; }
-            if (anxietyList.length === 0) { alert("불안 요소를 최소 하나 추가해주세요!"); return; }
-        
-            try {
-                const response = await fetch('/api/onboarding', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        participantId: pId,
-                        anxietyFactors: anxietyList,
-                        initialAnxiety: level,
-                        purpose: purpose
-                    })
-                });
-        
-                if (response.ok) {
-                    showSection('dashboard-section');
-                    document.getElementById('welcomeMsg').innerText = `안녕하세요, ${pId}님!`;
-                    document.getElementById('avgAnxiety').innerText = level;
-                    const keywordDisplay = document.getElementById('topKeyword');
-                    keywordDisplay.innerText = `#${anxietyList[0]}`;
-                }
-            } catch (err) {
-                alert("저장 중 오류 발생");
-            }
-        }
-        
-        // --- 5. 온보딩 UI 보조 기능 (태그, 수치 등) ---
-        
+
+        // --- 온보딩 및 기타 ---
         function addAnxietyTag() {
             const input = document.getElementById('anxietyInput');
-            const val = input.value.trim();
-            if (val && !anxietyList.includes(val)) {
-                anxietyList.push(val);
+            if (input.value.trim() && !anxietyList.includes(input.value)) {
+                anxietyList.push(input.value.trim());
                 renderTags();
                 input.value = "";
             }
         }
-        
+
         function renderTags() {
-            const container = document.getElementById('anxietyTagsContainer');
-            container.innerHTML = anxietyList.map((tag, i) => `
-                <div class="tag">${tag} <b onclick="removeTag(${i})" style="cursor:pointer;">×</b></div>
+            document.getElementById('anxietyTagsContainer').innerHTML = anxietyList.map((t, i) => `
+                <div class="tag">${t} <b onclick="anxietyList.splice(${i},1);renderTags();" style="cursor:pointer">×</b></div>
             `).join('');
         }
-        
-        function removeTag(i) {
-            anxietyList.splice(i, 1);
-            renderTags();
+
+        document.getElementById('initialAnxiety').oninput = (e) => document.getElementById('levelDisplay').innerText = e.target.value;
+
+        async function submitOnboarding() {
+            const pId = document.getElementById('participantId').value;
+            if (!pId || anxietyList.length === 0) return alert("ID와 불안 요소를 입력해주세요!");
+            
+            // 대시보드 반영
+            document.getElementById('welcomeMsg').innerText = `안녕하세요, ${pId}님!`;
+            document.getElementById('avgAnxiety').innerText = document.getElementById('initialAnxiety').value;
+            document.getElementById('topKeyword').innerText = `#${anxietyList[0]}`;
+            showSection('dashboard-section');
         }
-        
-        document.getElementById('initialAnxiety').addEventListener('input', (e) => {
-            document.getElementById('levelDisplay').innerText = e.target.value;
-        });
-        
-        // --- 6. 트래킹 차트 ---
+
+        async function loginUser() {
+            const pId = document.getElementById('loginId').value;
+            if (!pId) return alert("ID를 입력하세요");
+            alert("데모 버전: 신규 가입을 이용해 주세요.");
+        }
+
         function toggleTracking() {
-            const trackingSection = document.getElementById('tracking-section');
-            trackingSection.classList.toggle('hidden');
-            if (!trackingSection.classList.contains('hidden')) renderChart();
+            const el = document.getElementById('tracking-section');
+            el.classList.toggle('hidden');
+            if (!el.classList.contains('hidden')) renderChart();
         }
-        
+
         function renderChart() {
             const ctx = document.getElementById('anxietyChart').getContext('2d');
             if (myChart) myChart.destroy();
-            const initialLevel = document.getElementById('initialAnxiety').value;
             myChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: ['1월', '2월', '3월', '4월', '현재'],
-                    datasets: [{
-                        label: '불안 지수',
-                        data: [7, 6, 8, 5, initialLevel],
-                        borderColor: '#007bff',
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: { scales: { y: { beginAtZero: true, max: 10 } } }
+                    labels: ['1월', '2월', '3월', '현재'],
+                    datasets: [{ label: '불안 지수', data: [7, 5, 8, document.getElementById('initialAnxiety').value], borderColor: '#007bff' }]
+                }
             });
         }
-        
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
