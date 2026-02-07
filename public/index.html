@@ -150,6 +150,30 @@
                 <canvas id="anxietyChart"></canvas>
             </div>
         </div>
+
+        <div id="chat-section" class="hidden">
+            <div style="display: flex; align-items: center; margin-bottom: 20px; gap: 10px;">
+                <button onclick="showSection('dashboard-section')" style="width: auto; padding: 8px 12px; background: #f0f0f0; color: #333; margin: 0;">←</button>
+                <h2 style="margin: 0;">마음 나누기</h2>
+            </div>
+        
+            <div id="chat-window" style="height: 400px; overflow-y: auto; border: 1px solid #eee; border-radius: 16px; padding: 15px; background: #fafafa; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px;">
+                <div class="bot-msg" style="background: #eef2ff; padding: 10px 15px; border-radius: 15px 15px 15px 0; align-self: flex-start; max-width: 85%; font-size: 14px;">
+                    안녕하세요. 오늘 어떤 마음이 당신을 힘들게 하나요? 당신의 불안을 함께 들여다보고, Veo로 특별한 위로 영상을 만들어 드릴게요.
+                </div>
+            </div>
+        
+            <div class="input-group">
+                <input type="text" id="chatInput" placeholder="당신의 마음을 적어주세요..." onkeypress="if(event.key==='Enter') sendMessage()">
+                <button onclick="sendMessage()" class="add-btn" style="background: var(--primary-color);">전송</button>
+            </div>
+        
+            <div id="video-gen-area" class="hidden" style="margin-top: 20px; text-align: center;">
+                <p style="font-size: 13px; color: #666;">대화를 바탕으로 위로 영상을 만들 준비가 되었습니다.</p>
+                <button onclick="generateVideo()" style="background: #ff7b00;">✨ Veo로 힐링 영상 생성하기</button>
+            </div>
+        </div>
+            
     </div>
 
     <script>
@@ -280,45 +304,40 @@
             }
         
             try {
-                // 실제 서버 API 경로 (/api/user/아이디)로 요청
                 const response = await fetch(`/api/user/${pId}`);
-                const userData = await response.json();
-        
+                
                 if (response.ok) {
-                    // 1. 서버에서 가져온 데이터를 전역 변수에 저장
+                    // [성공] 기록이 있는 경우
+                    const userData = await response.json();
                     anxietyList = userData.anxietyFactors || [];
                     const initialLevel = userData.initialAnxiety || "5";
         
-                    // 2. 대시보드 화면 업데이트
                     document.getElementById('welcomeMsg').innerText = `안녕하세요, ${userData.participantId}님!`;
                     document.getElementById('avgAnxiety').innerText = initialLevel;
-                    
-                    // 키워드 업데이트 (태그 형태로 표시)
-                    const keywordDisplay = document.getElementById('topKeyword');
-                    if (anxietyList.length > 0) {
-                        keywordDisplay.innerText = anxietyList.map(tag => `#${tag}`).join(' ');
-                    } else {
-                        keywordDisplay.innerText = "등록된 키워드 없음";
-                    }
+                    document.getElementById('topKeyword').innerText = anxietyList.map(tag => `#${tag}`).join(' ');
         
-                    // 3. 온보딩 입력값 미리 채워두기 (수정 시 편리함)
-                    document.getElementById('participantId').value = userData.participantId;
-                    document.getElementById('initialAnxiety').value = initialLevel;
-                    document.getElementById('levelDisplay').innerText = initialLevel;
-                    renderTags(); // 불안 요소 태그들 다시 그리기
-        
-                    // 4. 화면 전환
                     showSection('dashboard-section');
                 } else {
-                    // 서버에서 에러 메시지를 보낸 경우 (예: 404 Not Found)
-                    alert("등록되지 않은 ID입니다: " + (userData.error || "확인 후 다시 시도해주세요."));
+                    // [실패] 서버는 응답했으나 해당 ID가 없는 경우 (404 등)
+                    if (confirm("등록되지 않은 ID입니다.\n이 ID로 새로 만드시겠어요?")) {
+                        goToOnboardingWithId(pId);
+                    }
                 }
             } catch (err) {
-                console.error("Login Error:", err);
-                alert("서버와 연결할 수 없습니다. 서버가 켜져 있는지 확인해 주세요.");
+                // [에러] 서버 자체가 꺼져있거나 연결할 수 없는 경우
+                console.error("Connection Error:", err);
+                if (confirm("현재 서버에 연결할 수 없거나 기록을 찾을 수 없습니다.\n새로운 아이디로 시작하시겠어요?")) {
+                    goToOnboardingWithId(pId);
+                }
             }
         }
-
+        
+        // 아이디를 들고 온보딩 페이지로 바로 이동시켜주는 보조 함수
+        function goToOnboardingWithId(pId) {
+            showSection('onboarding-section');
+            document.getElementById('participantId').value = pId; // 로그인하려던 ID를 자동으로 채워줌
+        }
+        
         function toggleTracking() {
             const el = document.getElementById('tracking-section');
             el.classList.toggle('hidden');
@@ -336,7 +355,67 @@
                 }
             });
         }
+
+        // 1. 대화 시작 함수
+        function startConversation() {
+            showSection('chat-section');
+        }
+        
+        // 2. 메시지 전송 함수
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const chatWindow = document.getElementById('chat-window');
+            const text = input.value.trim();
+        
+            if (!text) return;
+        
+            // 사용자 메시지 표시
+            appendMessage('user', text);
+            input.value = "";
+        
+            // 대화 중에는 영상 생성 버튼 보이기 (예시: 첫 메시지 이후 바로 노출)
+            document.getElementById('video-gen-area').classList.remove('hidden');
+        
+            // [여기에 ChatGPT API 연동]
+            // 지금은 데모용 자동 응답
+            setTimeout(() => {
+                appendMessage('bot', `당신이 느끼는 '${text}'에 대한 불안을 이해해요. 그 상황을 아름다운 영상으로 바꾸어 시각화해 드릴게요.`);
+            }, 800);
+        }
+        
+        function appendMessage(sender, text) {
+            const chatWindow = document.getElementById('chat-window');
+            const msgDiv = document.createElement('div');
+            
+            if (sender === 'user') {
+                msgDiv.style = "background: var(--primary-color); color: white; padding: 10px 15px; border-radius: 15px 15px 0 15px; align-self: flex-end; max-width: 85%; font-size: 14px;";
+            } else {
+                msgDiv.style = "background: #eef2ff; color: #333; padding: 10px 15px; border-radius: 15px 15px 15px 0; align-self: flex-start; max-width: 85%; font-size: 14px;";
+            }
+            
+            msgDiv.innerText = text;
+            chatWindow.appendChild(msgDiv);
+            chatWindow.scrollTop = chatWindow.scrollHeight; // 스크롤 하단 고정
+        }
+        
+        // 3. Veo/Sora 영상 생성 함수
+        async function generateVideo() {
+            alert("Veo 모델이 대화를 분석하여 영상을 생성하기 시작합니다... (약 1~2분 소요)");
+            
+            // 실제 구현 시: 
+            // 1. ChatGPT에게 대화 내용을 요약해달라고 함 (Prompt Engineering)
+            // 2. 요약된 프롬프트를 Veo API에 전송
+            // 3. 결과 영상 URL을 받아옴
+        
+            // 가상 완료 처리
+            setTimeout(() => {
+                alert("영상 생성이 완료되었습니다! 대시보드에서 확인하세요.");
+                showSection('dashboard-section');
+            }, 3000);
+        }
+        
     </script>
 </body>
 </html>
+
 
