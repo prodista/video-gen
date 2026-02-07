@@ -119,11 +119,13 @@
     
 <body>
     <div class="container">
-        <div style="text-align: center; margin-bottom: 30px; font-weight: bold; color: #888; font-size: 14px;">
-                Anxiety Eliminator
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div onclick="goHome()" style="cursor: pointer; font-weight: bold; color: #888; font-size: 14px;">
+                🏠 Anxiety Eliminator
             </div>
-        
-        <div id="intro-section">
+        </div>
+
+    <div id="intro-section"> ... </div>
             <h2>반가워요!</h2>
             <p>불안 퇴치 서비스입니다.</p>
             <button onclick="goToSurveyIntro()" style="background:#28a745;">처음 왔어요 (신규 유저)</button>
@@ -246,6 +248,18 @@
 
     <script>
 
+        // 어느 페이지에서든 인트로로 돌아가는 함수
+        function goHome() {
+            if (confirm("처음 화면으로 돌아가시겠습니까? (진행 중인 내용은 저장되지 않을 수 있습니다)")) {
+                // 설문 데이터 초기화 (필요 시)
+                currentQuestionIndex = 0;
+                userAnswers = [];
+                
+                // 인트로 섹션으로 이동
+                showSection('intro-section');
+            }
+        }
+        
         // --- 1. 전역 변수 설정 (중복 선언 방지) ---
         let currentQuestionIndex = 0;
         let userAnswers = [];
@@ -482,6 +496,7 @@
     </script>
 </body>
 </html>
+
 
 
 
