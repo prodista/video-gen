@@ -100,14 +100,30 @@
         <div class="home-link" onclick="goHome()">🏠 Anxiety Eliminator</div>
 
         <div id="intro-section">
-            <h2>반가워요!</h2>
-            <p>불안 퇴치 서비스입니다.</p>
-            <button onclick="goToSurveyIntro()" style="background:#28a745;">처음 왔어요 (신규 유저)</button>
-            
-            <div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px;">
-                <p>이미 이용한 적이 있나요?</p>
-                <input type="text" id="loginId" placeholder="기존 ID 입력">
-                <button onclick="loginUser()">내 기록 불러오기</button>
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: var(--primary-color); font-size: 28px; margin-bottom: 10px;">Anxiety Eliminator</h1>
+                <p style="color: #666; font-size: 15px; line-height: 1.5;">
+                    본 플랫폼은 생성형 AI가 매개한 영상 서사가<br>
+                    타인에 대한 이해와 공감을 어떻게 촉진하는지 연구합니다.
+                </p>
+            </div>
+        
+            <div class="card" style="border: 2px solid #eef2ff;">
+                <h3 style="margin-top: 0; color: #28a745;">Study 1. 자전적 서사 시각화</h3>
+                <p style="font-size: 14px; color: #555;">자신의 가치관과 삶의 경험을 AI와 협업하여 영상으로 제작하고, 표현의 적절성을 검증합니다.</p>
+                <button onclick="startStudy1()" style="background:#28a745;">내 영상 제작 시작하기</button>
+            </div>
+        
+            <div class="card" style="border: 2px solid #f8faff;">
+                <h3 style="margin-top: 0; color: var(--primary-color);">Study 2. 타인 이해 효과 검증</h3>
+                <p style="font-size: 14px; color: #555;">AI로 생성된 타인의 영상 서사를 시청하고, 해당 인물에 대한 공감과 이해도를 측정합니다.</p>
+                <button onclick="startStudy2()" style="background: var(--primary-color);">타인 영상 평가 시작하기</button>
+            </div>
+        
+            <div style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+                <p style="font-size: 14px; color: #888;">기존 참가자이신가요?</p>
+                <input type="text" id="loginId" placeholder="참가자 ID 입력">
+                <button onclick="loginUser()" style="background: #6c757d; padding: 12px;">기록 불러오기</button>
             </div>
         </div>
 
@@ -130,6 +146,51 @@
                 </div>
             </div>
         </div>
+        
+         <div id="study2-section" class="hidden">
+            <div style="display: flex; align-items: center; margin-bottom: 20px; gap: 10px;">
+                <button onclick="goHome()" style="width: auto; padding: 8px 12px; background: #f0f0f0; color: #333; margin: 0;">←</button>
+                <h2 style="margin: 0;">타인 이해도 평가</h2>
+            </div>
+        
+            <div class="card" style="background: #fff; border: 1px solid #ddd;">
+                <p style="font-size: 13px; color: #666; margin-bottom: 10px;">다음은 다른 참가자의 자전적 서사입니다.</p>
+                
+                <div id="stimulus-content">
+                    <div id="video-stimulus" style="width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white;">
+                        <p>🎥 AI Generated Video Player</p>
+                    </div>
+                    <div id="text-stimulus" style="margin-top: 15px; line-height: 1.6; color: #333;">
+                        "저는 어릴 적부터 경쟁적인 환경에서 자랐습니다. 하지만 작년에 숲으로 여행을 가서 처음으로 고요함을 느꼈고, 그때부터 '내면의 평화'가 제 삶의 가장 중요한 가치가 되었습니다..."
+                    </div>
+                </div>
+            </div>
+        
+            <div style="margin-top: 25px;">
+                <p style="font-weight: bold;">Q1. 이 사람의 가치관이 얼마나 명확하게 이해되나요?</p>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                    <label><input type="radio" name="empathy1" value="1"> 1</label>
+                    <label><input type="radio" name="empathy1" value="2"> 2</label>
+                    <label><input type="radio" name="empathy1" value="3"> 3</label>
+                    <label><input type="radio" name="empathy1" value="4"> 4</label>
+                    <label><input type="radio" name="empathy1" value="5"> 5</label>
+                </div>
+        
+                <p style="font-weight: bold;">Q2. 이 사람의 경험에 대해 얼마나 공감이 가나요?</p>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                    <label><input type="radio" name="empathy2" value="1"> 1</label>
+                    <label><input type="radio" name="empathy2" value="2"> 2</label>
+                    <label><input type="radio" name="empathy2" value="3"> 3</label>
+                    <label><input type="radio" name="empathy2" value="4"> 4</label>
+                    <label><input type="radio" name="empathy2" value="5"> 5</label>
+                </div>
+        
+                <label style="font-weight: bold;">Q3. 이 영상(혹은 글)을 보고 느낀 감정을 적어주세요.</label>
+                <textarea id="qualitative-resp" placeholder="자유롭게 기술해주세요." style="height: 100px;"></textarea>
+        
+                <button onclick="submitEvaluation()" style="background: var(--primary-color); margin-top: 20px;">평가 완료</button>
+            </div>
+        </div> 
         
         <div id="onboarding-section" class="hidden">
             <h2>거의 다 됐어요!</h2>
@@ -216,7 +277,13 @@
         ];
 
         function showSection(sectionId, isBack = false) {
-            const sections = ['intro-section', 'survey-section', 'onboarding-section', 'dashboard-section', 'chat-section'];
+            const sections = [
+                'intro-section',
+                'survey-section',
+                'onboarding-section',
+                'dashboard-section',
+                'chat-section',
+                'study2-section'];
             
             sections.forEach(id => {
                 const el = document.getElementById(id);
@@ -224,12 +291,8 @@
             });
         
             const target = document.getElementById(sectionId);
-            if (target) {
-                target.classList.remove('hidden');
-            } else {
-                console.error("섹션을 찾을 수 없습니다:", sectionId);
-            }
-        
+            if (target) target.classList.remove('hidden');
+            
             if (!isBack) {
                 history.pushState({ sectionId: sectionId }, '', `#${sectionId}`);
             }
@@ -459,9 +522,57 @@
             }, 3000);
         }
         
+        // Study 1 시작 (기존의 설문 -> 온보딩 -> 채팅 흐름)
+        function startStudy1() {
+            console.log("Study 1 시작: 제작자 모드");
+            // 초기화가 필요한 경우 여기에 작성
+            currentQuestionIndex = 0;
+            userAnswers = [];
+            goToSurveyIntro(); // 기존 설문 페이지로 이동
+        }
+        
+        // Study 2 시작 (타인 영상 평가 모드)
+        function startStudy2() {
+            // 1. 실험군/대조군 무작위 할당 (A: 텍스트, B: 사진, C: 영상)
+            const conditions = ['A', 'B', 'C'];
+            const assignedCondition = conditions[Math.floor(Math.random() * conditions.length)];
+            
+            console.log(`피험자 할당 조건: ${assignedCondition}`);
+            
+            // 2. 섹션 전환
+            showSection('study2-section');
+            
+            // 3. 조건별 UI 제어
+            const videoEl = document.getElementById('video-stimulus');
+            if (assignedCondition === 'A') {
+                videoEl.style.display = 'none'; // 텍스트만 보여줌
+            } else {
+                videoEl.style.display = 'flex'; // 영상/사진 영역 보여줌
+            }
+        }
+        
+        async function submitEvaluation() {
+            // 설문 응답 수집
+            const q1 = document.querySelector('input[name="empathy1"]:checked')?.value;
+            const q2 = document.querySelector('input[name="empathy2"]:checked')?.value;
+            const textResp = document.getElementById('qualitative-resp').value;
+        
+            if (!q1 || !q2) {
+                alert("모든 평가 문항에 답해주세요.");
+                return;
+            }
+        
+            // 서버로 데이터 전송 (실제 API 연결 시)
+            console.log("평가 데이터:", { q1, q2, textResp });
+        
+            alert("평가가 완료되었습니다. 감사합니다!");
+            goHome();
+        }
+        
     </script>
 </body>
 </html>
+
 
 
 
