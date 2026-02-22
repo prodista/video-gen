@@ -387,39 +387,23 @@
         document.getElementById('initialAnxiety').oninput = (e) => document.getElementById('levelDisplay').innerText = e.target.value;
 
         async function submitOnboarding() {
-            const pId = document.getElementById('participantId').value;
-            const initialAnxiety = document.getElementById('initialAnxiety').value;
-            const purpose = document.getElementById('purpose').value;
-        
-            if (!pId || anxietyList.length === 0) return alert("ID와 불안 요소를 입력해주세요!");
-        
-            const userData = {
-                participantId: pId,
-                anxietyFactors: anxietyList,
-                initialAnxiety: parseInt(initialAnxiety),
-                purpose: purpose,
-                createdAt: new Date().toISOString()
-            };
         
             try {
-                // Vercel의 Python API 경로로 전송
-                const response = await fetch('/api/user/onboarding', {
+                const response = await fetch('/api/user/onboarding', { 
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(userData)
                 });
-        
-                if (response.ok) {
-                    console.log("MongoDB 저장 성공");
-                    document.getElementById('welcomeMsg').innerText = `안녕하세요, ${pId}님!`;
-                    showSection('dashboard-section');
-                } else {
-                    alert("저장에 실패했습니다. 서버 설정을 확인하세요.");
+                
+                if (response.status === 404) {
+                    console.error("404 에러 발생: 서버 주소를 다시 확인하세요.");
                 }
+                // ...
             } catch (err) {
-                console.error("연결 오류:", err);
+                console.error(err);
             }
         }
+        
         const express = require('express');
         const mongoose = require('mongoose');
         const app = express();
@@ -631,6 +615,7 @@
     </script>
 </body>
 </html>
+
 
 
 
