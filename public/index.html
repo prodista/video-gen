@@ -92,6 +92,89 @@
             border-radius: 18px 18px 0 18px;
             align-self: flex-end;
         }
+
+        /* 채팅 섹션 전체 */
+        #chat-section {
+            display: flex;
+            flex-direction: column;
+            height: 100vh; /* 화면 꽉 채우기 */
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fdfdfd;
+        }
+        
+        /* 헤더 */
+        .chat-header {
+            padding: 15px;
+            background: white;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .chat-name { font-weight: bold; display: block; }
+        .chat-status { font-size: 12px; color: #28a745; }
+        
+        /* 메시지 영역 */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .msg {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .bot-msg {
+            background: #f0f2f5;
+            color: #333;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .user-msg {
+            background: #007bff;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        
+        /* 입력 영역 */
+        .chat-input-area {
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+        
+        #chatInput {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            padding: 10px 15px;
+            resize: none;
+            max-height: 100px;
+            outline: none;
+        }
+        
+        .send-btn {
+            background: none;
+            border: none;
+            color: #007bff;
+            cursor: pointer;
+            padding: 5px;
+        }
         
     </style>
 </head>
@@ -238,26 +321,26 @@
             </div>
         </div>
 
-        <div id="chat-section" class="hidden">
-            <div style="display: flex; align-items: center; margin-bottom: 20px; gap: 10px;">
-                <button onclick="showSection('dashboard-section')" style="width: auto; padding: 8px 12px; background: #f0f0f0; color: #333; margin: 0;">←</button>
-                <h2 style="margin: 0;">마음 나누기</h2>
-            </div>
-        
-            <div id="chat-window" style="height: 400px; overflow-y: auto; border: 1px solid #eee; border-radius: 16px; padding: 15px; background: #fafafa; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px;">
-                <div class="bot-msg" style="background: #eef2ff; padding: 10px 15px; border-radius: 15px 15px 15px 0; align-self: flex-start; max-width: 85%; font-size: 14px;">
-                    안녕하세요. 오늘 어떤 마음이 당신을 힘들게 하나요? 당신의 불안을 함께 들여다보고, Veo로 특별한 위로 영상을 만들어 드릴게요.
+       <div id="chat-section" class="hidden">
+            <div class="chat-header">
+                <button onclick="showSection('dashboard-section')" class="back-btn">←</button>
+                <div class="chat-info">
+                    <span class="chat-name">AI 서사 가이드</span>
+                    <span class="chat-status">● 온라인</span>
                 </div>
             </div>
         
-            <div class="input-group">
-                <input type="text" id="chatInput" placeholder="당신의 마음을 적어주세요..." onkeypress="if(event.key==='Enter') sendMessage()">
-                <button onclick="sendMessage()" class="add-btn" style="background: var(--primary-color);">전송</button>
+            <div id="chat-window" class="chat-messages">
+                <div class="msg bot-msg">
+                    안녕하세요! 당신의 소중한 삶의 기록을 영상으로 만들기 위해 몇 가지 대화를 나누고 싶어요. 가장 먼저 생각나는 소중한 기억이나 가치관이 있나요?
+                </div>
             </div>
         
-            <div id="video-gen-area" class="hidden" style="margin-top: 20px; text-align: center;">
-                <p style="font-size: 13px; color: #666;">대화를 바탕으로 위로 영상을 만들 준비가 되었습니다.</p>
-                <button onclick="generateVideo()" style="background: #ff7b00;">✨ Veo로 힐링 영상 생성하기</button>
+            <div class="chat-input-area">
+                <textarea id="chatInput" placeholder="당신의 마음을 들려주세요..." rows="1" onkeypress="handleEnter(event)"></textarea>
+                <button onclick="sendMessage()" class="send-btn">
+                    <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+                </button>
             </div>
         </div>
             
@@ -673,10 +756,52 @@
             div.innerHTML = videoHTML;
             chatWindow.appendChild(div);
         }
+
+        // 엔터키 입력 처리 (Shift+Enter는 줄바꿈)
+        function handleEnter(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+        
+        // 메시지 전송 및 자동 스크롤
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text) return;
+        
+            // 1. 사용자 메시지 추가
+            appendMessage('user', text);
+            input.value = "";
+            
+            // 2. 스크롤 하단으로
+            scrollToBottom();
+        
+            // 3. (임시) 봇 응답 - 나중에 여기에 GPT 연결
+            setTimeout(() => {
+                appendMessage('bot', "당신의 이야기가 무척 인상적이네요. 조금 더 자세히 들려주시겠어요?");
+                scrollToBottom();
+            }, 1000);
+        }
+        
+        function appendMessage(sender, text) {
+            const chatWindow = document.getElementById('chat-window');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `msg ${sender}-msg`;
+            msgDiv.innerText = text;
+            chatWindow.appendChild(msgDiv);
+        }
+        
+        function scrollToBottom() {
+            const chatWindow = document.getElementById('chat-window');
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
         
     </script>
 </body>
 </html>
+
 
 
 
