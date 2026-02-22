@@ -50,7 +50,6 @@
             width: 100%; padding: 16px; background: var(--primary-color); color: white; border: none; border-radius: 12px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; transition: opacity 0.2s;
         }
         button:active { opacity: 0.7; }
-        button:disabled { background: #ccc; cursor: not-allowed; }
         
         .tag-container { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
         .tag { background: #eef2ff; color: #444; padding: 6px 14px; border-radius: 20px; font-size: 14px; border: 1px solid #dbeafe; }
@@ -60,114 +59,74 @@
         .input-group input { flex: 1; margin: 0; }
         .add-btn { width: auto !important; padding: 12px 18px !important; margin: 0 !important; background: #6c757d; font-size: 14px; }
 
-        .thumb-placeholder {
-            min-width: 100px; height: 75px; background: #e9ecef; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #adb5bd; font-size: 12px; flex-shrink: 0; border: 1px solid #dee2e6;
+        /* 채팅 섹션 - 고정 레이아웃 */
+        #chat-section {
+            flex-direction: column;
+            height: 100vh; 
+            width: 100%;
+            max-width: 430px; /* 컨테이너와 동일하게 */
+            background: #ffffff;
+            position: fixed; 
+            top: 0;
+            z-index: 2000;
+        }
+        
+        .chat-header {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            gap: 12px;
+            border-bottom: 1px solid #eee;
         }
 
-        .survey-option.selected {
-            border: 2px solid var(--primary-color) !important;
-            background-color: #eef2ff !important;
-            color: var(--primary-color) !important;
-            font-weight: bold;
+        .back-btn {
+            width: 32px !important;
+            height: 32px !important;
+            padding: 0 !important;
+            font-size: 18px !important;
+            border-radius: 50%;
+            border: 1px solid #ddd;
+            background: #f8f9fa;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 !important;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: #f9f9f9;
         }
 
-        .bot-msg, .user-msg {
+        .msg {
             max-width: 85%;
             padding: 12px 16px;
             font-size: 14px;
             line-height: 1.5;
+            border-radius: 18px;
             word-break: break-all;
         }
         
         .bot-msg {
             background: #eef2ff;
             color: #333;
-            border-radius: 18px 18px 18px 0;
-            align-self: flex-start;
-        }
-        
-        .user-msg {
-            background: var(--primary-color);
-            color: white;
-            border-radius: 18px 18px 0 18px;
-            align-self: flex-end;
-        }
-
-        /* 채팅 섹션 전체 */
-        #chat-section {
-            display: flex !important;
-            flex-direction: column;
-            height: 100vh; 
-            width: 100%;
-            max-width: 500px;
-            margin: 0 auto;
-            background: #ffffff;
-            position: fixed; /* 화면에 고정 */
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-        }
-        
-        /* 헤더 */
-        .chat-header {
-            display: flex;
-            align-items: center;
-            padding: 10px 15px;
-            gap: 12px;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .chat-name { font-weight: bold; display: block; }
-        .chat-status { font-size: 12px; color: #28a745; }
-        
-        /* 메시지 영역 */
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-            background: #f9f9f9;
-        }
-
-        .back-btn {
-            width: 32px !important;   /* 가로 크기 제한 */
-            height: 32px !important;  /* 세로 크기 제한 */
-            padding: 0 !important;    /* 내부 여백 제거 */
-            font-size: 16px !important;
-            line-height: 32px;
-            border-radius: 50%;       /* 동그란 버튼 형태 */
-            border: 1px solid #ddd;
-            background: #f8f9fa;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;           /* 크기 줄어들지 않게 고정 */
-        }
-        
-        .msg {
-            max-width: 80%;
-            padding: 12px 16px;
-            border-radius: 18px;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-        
-        .bot-msg {
-            background: #f0f2f5;
-            color: #333;
             align-self: flex-start;
             border-bottom-left-radius: 4px;
         }
         
         .user-msg {
-            background: #007bff;
+            background: var(--primary-color);
             color: white;
             align-self: flex-end;
             border-bottom-right-radius: 4px;
         }
         
-        /* 입력 영역 */
         .chat-input-area {
             padding: 15px;
             background: white;
@@ -182,19 +141,23 @@
             border: 1px solid #ddd;
             border-radius: 20px;
             padding: 10px 15px;
+            margin: 0;
             resize: none;
-            max-height: 100px;
-            outline: none;
+            max-height: 80px;
+            font-size: 14px;
         }
         
         .send-btn {
+            width: auto !important;
             background: none;
-            border: none;
-            color: #007bff;
-            cursor: pointer;
-            padding: 5px;
+            color: var(--primary-color);
+            padding: 10px !important;
+            margin: 0 !important;
         }
-        
+
+        .thumb-placeholder {
+            min-width: 100px; height: 75px; background: #e9ecef; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #adb5bd; font-size: 12px; flex-shrink: 0; border: 1px solid #dee2e6;
+        }
     </style>
 </head>
 <body>
@@ -203,271 +166,91 @@
 
         <div id="intro-section">
             <div style="text-align: center; margin-bottom: 30px;">
-                <h1 style="color: var(--primary-color); font-size: 28px; margin-bottom: 10px;">Anxiety Eliminator</h1>
-                <p style="color: #666; font-size: 15px; line-height: 1.5;">
-                    본 플랫폼은 생성형 AI가 매개한 영상 서사가<br>
-                    타인에 대한 이해와 공감을 어떻게 촉진하는지 연구합니다.
-                </p>
+                <h1 style="color: var(--primary-color); font-size: 28px;">Anxiety Eliminator</h1>
+                <p style="color: #666; font-size: 14px;">생성형 AI와 함께하는 나의 서사 시각화</p>
             </div>
-        
-            <div class="card" style="border: 2px solid #eef2ff;">
-                <h3 style="margin-top: 0; color: #28a745;">Study 1. 자전적 서사 시각화</h3>
-                <p style="font-size: 14px; color: #555;">자신의 가치관과 삶의 경험을 AI와 협업하여 영상으로 제작하고, 표현의 적절성을 검증합니다.</p>
-                <button onclick="startStudy1()" style="background:#28a745;">내 영상 제작 시작하기</button>
+            <div class="card">
+                <h3 style="margin-top:0;">Study 1. 자전적 서사 시각화</h3>
+                <button onclick="startStudy1()">내 영상 제작 시작하기</button>
             </div>
-        
-            <div class="card" style="border: 2px solid #f8faff;">
-                <h3 style="margin-top: 0; color: var(--primary-color);">Study 2. 타인 이해 효과 검증</h3>
-                <p style="font-size: 14px; color: #555;">AI로 생성된 타인의 영상 서사를 시청하고, 해당 인물에 대한 공감과 이해도를 측정합니다.</p>
-                <button onclick="startStudy2()" style="background: var(--primary-color);">타인 영상 평가 시작하기</button>
-            </div>
-        
-            <div style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
-                <p style="font-size: 14px; color: #888;">기존 참가자이신가요?</p>
-                <input type="text" id="loginId" placeholder="참가자 ID 입력">
-                <button onclick="loginUser()" style="background: #6c757d; padding: 12px;">기록 불러오기</button>
+            <div class="card">
+                <h3 style="margin-top:0;">Study 2. 타인 이해 효과 검증</h3>
+                <button onclick="startStudy2()" style="background:#6c757d;">타인 영상 평가 시작하기</button>
             </div>
         </div>
 
         <div id="survey-section" class="hidden">
-            <div id="survey-intro">
-                <h2>처음이시군요!</h2>
-                <p style="color: #666; line-height: 1.6;">
-                    반갑습니다. 서비스를 시작하기 전에,<br>
-                    당신에 대해 조금 더 알고 싶어요.<br>
-                    잠시 설문조사에 응해주시겠어요?
-                </p>
-                <button onclick="startActualQuestions()" style="background:#28a745; margin-top: 20px;">네, 좋아요!</button>
-            </div>
-        
-            <div id="survey-container" class="hidden">
-                <div id="survey-content"></div>
-                <div class="input-group" style="margin-top: 30px;">
-                    <button id="prevBtn" style="background: #6c757d; flex: 1;">이전</button>
-                    <button id="nextBtn" style="background: #007bff; flex: 1;">다음</button>
-                </div>
-            </div>
+            <h2>기초 질문</h2>
+            <div id="survey-content"></div>
+            <button id="nextBtn">다음</button>
         </div>
-        
-         <div id="study2-section" class="hidden">
-            <div style="display: flex; align-items: center; margin-bottom: 20px; gap: 10px;">
-                <button onclick="goHome()" style="width: auto; padding: 8px 12px; background: #f0f0f0; color: #333; margin: 0;">←</button>
-                <h2 style="margin: 0;">타인 이해도 평가</h2>
-            </div>
-        
-            <div class="card" style="background: #fff; border: 1px solid #ddd;">
-                <p style="font-size: 13px; color: #666; margin-bottom: 10px;">다음은 다른 참가자의 자전적 서사입니다.</p>
-                
-                <div id="stimulus-content">
-                    <div id="video-stimulus" style="width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white;">
-                        <p>🎥 AI Generated Video Player</p>
-                    </div>
-                    <div id="text-stimulus" style="margin-top: 15px; line-height: 1.6; color: #333;">
-                        "저는 어릴 적부터 경쟁적인 환경에서 자랐습니다. 하지만 작년에 숲으로 여행을 가서 처음으로 고요함을 느꼈고, 그때부터 '내면의 평화'가 제 삶의 가장 중요한 가치가 되었습니다..."
-                    </div>
-                </div>
-            </div>
-        
-            <div style="margin-top: 25px;">
-                <p style="font-weight: bold;">Q1. 이 사람의 가치관이 얼마나 명확하게 이해되나요?</p>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-                    <label><input type="radio" name="empathy1" value="1"> 1</label>
-                    <label><input type="radio" name="empathy1" value="2"> 2</label>
-                    <label><input type="radio" name="empathy1" value="3"> 3</label>
-                    <label><input type="radio" name="empathy1" value="4"> 4</label>
-                    <label><input type="radio" name="empathy1" value="5"> 5</label>
-                </div>
-        
-                <p style="font-weight: bold;">Q2. 이 사람의 경험에 대해 얼마나 공감이 가나요?</p>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-                    <label><input type="radio" name="empathy2" value="1"> 1</label>
-                    <label><input type="radio" name="empathy2" value="2"> 2</label>
-                    <label><input type="radio" name="empathy2" value="3"> 3</label>
-                    <label><input type="radio" name="empathy2" value="4"> 4</label>
-                    <label><input type="radio" name="empathy2" value="5"> 5</label>
-                </div>
-        
-                <label style="font-weight: bold;">Q3. 이 영상(혹은 글)을 보고 느낀 감정을 적어주세요.</label>
-                <textarea id="qualitative-resp" placeholder="자유롭게 기술해주세요." style="height: 100px;"></textarea>
-        
-                <button onclick="submitEvaluation()" style="background: var(--primary-color); margin-top: 20px;">평가 완료</button>
-            </div>
-        </div> 
-        
+
         <div id="onboarding-section" class="hidden">
             <h2>거의 다 됐어요!</h2>
-            <label>ID 설정</label>
-            <input type="text" id="participantId" placeholder="사용하실 ID를 입력하세요">
-
-            <label>불안 요소 (추가 버튼을 눌러주세요)</label>
+            <input type="text" id="participantId" placeholder="사용하실 ID 입력">
             <div class="input-group">
-                <input type="text" id="anxietyInput" placeholder="예: 직장, 건강, 미래">
-                <button type="button" class="add-btn" onclick="addAnxietyTag()">추가</button>
+                <input type="text" id="anxietyInput" placeholder="불안 요소 추가">
+                <button class="add-btn" onclick="addAnxietyTag()">추가</button>
             </div>
             <div id="anxietyTagsContainer" class="tag-container"></div>
-
-            <label>현재 불안 수치: <span id="levelDisplay">5</span></label>
-            <input type="range" id="initialAnxiety" min="1" max="10" value="5">
-
-            <label>사용 목적</label>
-            <select id="purpose">
-                <option value="care">감정 정리</option>
-                <option value="positive">미래를 긍정적으로 상상하기</option>
-                <option value="pattern">불안 패턴 파악</option>
-            </select>
-
             <button onclick="submitOnboarding()">시작하기</button>
         </div>
 
         <div id="dashboard-section" class="hidden">
-            <h2 id="welcomeMsg">안녕하세요!</h2>
+            <h2 id="welcomeMsg">환영합니다!</h2>
             <div class="card">
-                <p>📊 평균 불안 수치: <span id="avgAnxiety" style="font-weight:bold; color:red;">-</span></p>
-                <p>🏷 주요 키워드: <span id="topKeyword" style="font-weight:bold; color:blue;">-</span></p>
+                <p>📊 최근 기록된 불안 수치: <span id="avgAnxiety">-</span></p>
             </div>
-            <div style="margin-top: 20px;">
-                <p style="font-weight: bold;">🎥 최근 영상</p>
-                <div id="recentVideos" style="display: flex; gap: 10px; overflow-x: auto;">
-                    <div class="thumb-placeholder">기록 없음</div>
-                </div>
-            </div>
-            <div style="margin-top: 25px;">
-                <button onclick="toggleTracking()" style="background:#28a745;">📊 나의 변화 확인하기 (트래킹)</button>
-                <button onclick="startConversation()" style="background:#ff7b00; margin-top:12px;">💬 오늘의 대화 시작하기</button>
-            </div>
-            <div id="tracking-section" class="hidden" style="margin-top:20px;">
-                <canvas id="anxietyChart"></canvas>
-            </div>
+            <button onclick="startConversation()" style="background:#ff7b00;">💬 오늘의 대화 시작하기</button>
+            <button onclick="goHome()" style="background:#6c757d; margin-top:10px;">로그아웃</button>
         </div>
 
-        <div id="chat-section">
+        <div id="chat-section" class="hidden">
             <div class="chat-header">
                 <button onclick="showSection('dashboard-section')" class="back-btn">〈</button>
                 <div class="chat-info">
-                    <span style="font-weight: bold; font-size: 15px;">AI 서사 가이드</span>
+                    <span class="chat-name">AI 서사 가이드</span>
+                    <span class="chat-status">● 실시간 연결 중</span>
                 </div>
             </div>
-        
             <div id="chat-window" class="chat-messages">
-                </div>
-        
+                <div class="msg bot-msg">안녕하세요! 당신의 오늘 하루는 어떠셨나요? 영상으로 만들고 싶은 특별한 장면이 있다면 들려주세요.</div>
+            </div>
             <div class="chat-input-area">
-                <textarea id="chatInput" placeholder="메시지를 입력하세요..."></textarea>
+                <textarea id="chatInput" placeholder="메시지를 입력하세요..." onkeypress="handleEnter(event)"></textarea>
                 <button onclick="sendMessage()" class="send-btn">전송</button>
             </div>
         </div>
-            
     </div>
 
     <script>
-        // --- 전역 변수 ---
-        let currentQuestionIndex = 0;
-        let userAnswers = [];
         let anxietyList = [];
-        let myChart = null;
 
-        const surveyQuestions = [
-            { question: "요즘 잠은 잘 주무시나요?", options: ["매우 잘 잠", "보통", "자주 깨거나 못 잠"] },
-            { question: "하루 중 가장 불안한 시간대는?", options: ["아침", "오후", "밤/자기 전"] },
-            { question: "불안할 때 나타나는 증상은?", options: ["두근거림", "호흡 곤란", "근육 긴장", "없음"] }
-        ];
-
-        function showSection(sectionId, isBack = false) {
-            const sections = [
-                'intro-section',
-                'survey-section',
-                'onboarding-section',
-                'dashboard-section',
-                'chat-section',
-                'study2-section'];
-            
+        function showSection(sectionId) {
+            const sections = ['intro-section', 'survey-section', 'onboarding-section', 'dashboard-section', 'chat-section'];
             sections.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.add('hidden');
             });
-        
             const target = document.getElementById(sectionId);
-            if (target) target.classList.remove('hidden');
-            
-            if (!isBack) {
-                history.pushState({ sectionId: sectionId }, '', `#${sectionId}`);
+            if (target) {
+                target.classList.remove('hidden');
+                // 만약 채팅창이면 flex로 보임 처리
+                if(sectionId === 'chat-section') target.style.display = 'flex';
             }
         }
 
         function goHome() {
-            if (confirm("처음 화면으로 돌아가시겠습니까?")) {
-                currentQuestionIndex = 0;
-                userAnswers = [];
-                showSection('intro-section');
-            }
+            showSection('intro-section');
         }
 
-        window.onpopstate = (e) => showSection(e.state?.sectionId || 'intro-section', true);
-
-        // --- 설문 로직 ---
-        function goToSurveyIntro() {
-            showSection('survey-section');
-            document.getElementById('survey-intro').classList.remove('hidden');
-            document.getElementById('survey-container').classList.add('hidden');
+        function startStudy1() {
+            showSection('onboarding-section');
         }
 
-        function startActualQuestions() {
-            document.getElementById('survey-intro').classList.add('hidden');
-            document.getElementById('survey-container').classList.remove('hidden');
-            renderSurvey();
-        }
-
-        function renderSurvey() {
-            const content = document.getElementById('survey-content');
-            const nextBtn = document.getElementById('nextBtn');
-            const prevBtn = document.getElementById('prevBtn');
-            const data = surveyQuestions[currentQuestionIndex];
-
-            content.innerHTML = `
-                <h3>Q${currentQuestionIndex + 1}.</h3>
-                <p style="font-weight:bold;">${data.question}</p>
-                ${data.options.map(opt => `
-                    <button class="survey-option ${userAnswers[currentQuestionIndex] === opt ? 'selected' : ''}" 
-                            onclick="selectOption('${opt}')" style="background:white; color:#333; border:1px solid #ddd; text-align:left;">
-                        ${opt}
-                    </button>
-                `).join('')}
-            `;
-
-            // 이전 버튼: 첫 질문이면 goHome으로 연결
-            prevBtn.innerText = currentQuestionIndex === 0 ? "처음으로" : "이전";
-            prevBtn.onclick = currentQuestionIndex === 0 ? goHome : prevSurvey;
-            
-            nextBtn.disabled = !userAnswers[currentQuestionIndex];
-            nextBtn.innerText = currentQuestionIndex === surveyQuestions.length - 1 ? "완료" : "다음";
-            nextBtn.onclick = nextSurvey;
-        }
-
-        function selectOption(opt) {
-            userAnswers[currentQuestionIndex] = opt;
-            renderSurvey();
-        }
-
-        function nextSurvey() {
-            if (currentQuestionIndex < surveyQuestions.length - 1) {
-                currentQuestionIndex++;
-                renderSurvey();
-            } else {
-                showSection('onboarding-section');
-            }
-        }
-
-        function prevSurvey() {
-            if (currentQuestionIndex > 0) {
-                currentQuestionIndex--;
-                renderSurvey();
-            }
-        }
-
-        // --- 온보딩 및 기타 ---
         function addAnxietyTag() {
             const input = document.getElementById('anxietyInput');
-            if (input.value.trim() && !anxietyList.includes(input.value)) {
+            if (input.value.trim()) {
                 anxietyList.push(input.value.trim());
                 renderTags();
                 input.value = "";
@@ -476,348 +259,53 @@
 
         function renderTags() {
             document.getElementById('anxietyTagsContainer').innerHTML = anxietyList.map((t, i) => `
-                <div class="tag">${t} <b onclick="anxietyList.splice(${i},1);renderTags();" style="cursor:pointer">×</b></div>
+                <div class="tag">${t} <span onclick="anxietyList.splice(${i},1);renderTags();" style="cursor:pointer">×</span></div>
             `).join('');
         }
 
-        document.getElementById('initialAnxiety').oninput = (e) => document.getElementById('levelDisplay').innerText = e.target.value;
-
-        async function submitOnboarding() {
+        function submitOnboarding() {
             const pId = document.getElementById('participantId').value;
-            if (!pId || anxietyList.length === 0) return alert("ID와 불안 요소를 입력해주세요!");
-            
-            // 대시보드 반영
-            document.getElementById('welcomeMsg').innerText = `안녕하세요, ${pId}님!`;
-            document.getElementById('avgAnxiety').innerText = document.getElementById('initialAnxiety').value;
-            document.getElementById('topKeyword').innerText = `#${anxietyList[0]}`;
+            if(!pId) return alert("ID를 입력해주세요.");
+            document.getElementById('welcomeMsg').innerText = `${pId}님, 환영합니다!`;
             showSection('dashboard-section');
         }
 
-        async function loginUser() {
-            const pId = document.getElementById('loginId').value.trim();
-            if (!pId) { 
-                alert("ID를 입력해주세요!"); 
-                return; 
-            }
-        
-            try {
-                const response = await fetch(`/api/user/${pId}`);
-                
-                if (response.ok) {
-                    // [성공] 기록이 있는 경우
-                    const userData = await response.json();
-                    anxietyList = userData.anxietyFactors || [];
-                    const initialLevel = userData.initialAnxiety || "5";
-        
-                    document.getElementById('welcomeMsg').innerText = `안녕하세요, ${userData.participantId}님!`;
-                    document.getElementById('avgAnxiety').innerText = initialLevel;
-                    document.getElementById('topKeyword').innerText = anxietyList.map(tag => `#${tag}`).join(' ');
-        
-                    showSection('dashboard-section');
-                } else {
-                    // [실패] 서버는 응답했으나 해당 ID가 없는 경우 (404 등)
-                    if (confirm("등록되지 않은 ID입니다.\n이 ID로 새로 만드시겠어요?")) {
-                        goToOnboardingWithId(pId);
-                    }
-                }
-            } catch (err) {
-                // [에러] 서버 자체가 꺼져있거나 연결할 수 없는 경우
-                console.error("Connection Error:", err);
-                if (confirm("현재 서버에 연결할 수 없거나 기록을 찾을 수 없습니다.\n새로운 아이디로 시작하시겠어요?")) {
-                    goToOnboardingWithId(pId);
-                }
-            }
-        }
-        
-        // 아이디를 들고 온보딩 페이지로 바로 이동시켜주는 보조 함수
-        function goToOnboardingWithId(pId) {
-            showSection('onboarding-section');
-            document.getElementById('participantId').value = pId; // 로그인하려던 ID를 자동으로 채워줌
-        }
-        
-        function toggleTracking() {
-            const el = document.getElementById('tracking-section');
-            el.classList.toggle('hidden');
-            if (!el.classList.contains('hidden')) renderChart();
-        }
-
-        function renderChart() {
-            const ctx = document.getElementById('anxietyChart').getContext('2d');
-            if (myChart) myChart.destroy();
-            myChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['1월', '2월', '3월', '현재'],
-                    datasets: [{ label: '불안 지수', data: [7, 5, 8, document.getElementById('initialAnxiety').value], borderColor: '#007bff' }]
-                }
-            });
-        }
-
-        // 1. 대화 시작 함수
         function startConversation() {
-            console.log("대화 시작!"); // 디버깅용
             showSection('chat-section');
-            
-            // 채팅창 진입 시 초기 메시지 세팅 (선택 사항)
-            const chatWindow = document.getElementById('chat-window');
-            if (chatWindow.children.length <= 1) { // 메시지가 초기 메시지 하나뿐이라면
-                // 추가 로직 필요 시 여기에 작성
-            }
-        }
-        
-        // 2. 메시지 전송 함수
-        async function sendMessage() {
-            const input = document.getElementById('chatInput');
-            const chatWindow = document.getElementById('chat-window');
-            const text = input.value.trim();
-        
-            if (!text) return;
-        
-            // 사용자 메시지 표시
-            appendMessage('user', text);
-            input.value = "";
-        
-            // 대화 중에는 영상 생성 버튼 보이기 (예시: 첫 메시지 이후 바로 노출)
-            document.getElementById('video-gen-area').classList.remove('hidden');
-        
-            // [여기에 ChatGPT API 연동]
-            // 지금은 데모용 자동 응답
-            setTimeout(() => {
-                appendMessage('bot', `당신이 느끼는 '${text}'에 대한 불안을 이해해요. 그 상황을 아름다운 영상으로 바꾸어 시각화해 드릴게요.`);
-            }, 800);
-        }
-        
-        function appendMessage(sender, text) {
-            const chatWindow = document.getElementById('chat-window');
-            const msgDiv = document.createElement('div');
-            
-            if (sender === 'user') {
-                msgDiv.style = "background: var(--primary-color); color: white; padding: 10px 15px; border-radius: 15px 15px 0 15px; align-self: flex-end; max-width: 85%; font-size: 14px;";
-            } else {
-                msgDiv.style = "background: #eef2ff; color: #333; padding: 10px 15px; border-radius: 15px 15px 15px 0; align-self: flex-start; max-width: 85%; font-size: 14px;";
-            }
-            
-            msgDiv.innerText = text;
-            chatWindow.appendChild(msgDiv);
-            chatWindow.scrollTop = chatWindow.scrollHeight; // 스크롤 하단 고정
-        }
-        
-        // 3. Veo/Sora 영상 생성 함수
-        async function generateVideo() {
-            alert("Veo 모델이 대화를 분석하여 영상을 생성하기 시작합니다... (약 1~2분 소요)");
-            
-            // 실제 구현 시: 
-            // 1. ChatGPT에게 대화 내용을 요약해달라고 함 (Prompt Engineering)
-            // 2. 요약된 프롬프트를 Veo API에 전송
-            // 3. 결과 영상 URL을 받아옴
-        
-            // 가상 완료 처리
-            setTimeout(() => {
-                alert("영상 생성이 완료되었습니다! 대시보드에서 확인하세요.");
-                showSection('dashboard-section');
-            }, 3000);
-        }
-        
-        // Study 1 시작 (기존의 설문 -> 온보딩 -> 채팅 흐름)
-        function startStudy1() {
-            console.log("Study 1 시작: 제작자 모드");
-            // 초기화가 필요한 경우 여기에 작성
-            currentQuestionIndex = 0;
-            userAnswers = [];
-            goToSurveyIntro(); // 기존 설문 페이지로 이동
-        }
-        
-        // Study 2 시작 (타인 영상 평가 모드)
-        function startStudy2() {
-            // 1. 실험군/대조군 무작위 할당 (A: 텍스트, B: 사진, C: 영상)
-            const conditions = ['A', 'B', 'C'];
-            const assignedCondition = conditions[Math.floor(Math.random() * conditions.length)];
-            
-            console.log(`피험자 할당 조건: ${assignedCondition}`);
-            
-            // 2. 섹션 전환
-            showSection('study2-section');
-            
-            // 3. 조건별 UI 제어
-            const videoEl = document.getElementById('video-stimulus');
-            if (assignedCondition === 'A') {
-                videoEl.style.display = 'none'; // 텍스트만 보여줌
-            } else {
-                videoEl.style.display = 'flex'; // 영상/사진 영역 보여줌
-            }
-        }
-        
-        async function submitEvaluation() {
-            // 설문 응답 수집
-            const q1 = document.querySelector('input[name="empathy1"]:checked')?.value;
-            const q2 = document.querySelector('input[name="empathy2"]:checked')?.value;
-            const textResp = document.getElementById('qualitative-resp').value;
-        
-            if (!q1 || !q2) {
-                alert("모든 평가 문항에 답해주세요.");
-                return;
-            }
-        
-            // 서버로 데이터 전송 (실제 API 연결 시)
-            console.log("평가 데이터:", { q1, q2, textResp });
-        
-            alert("평가가 완료되었습니다. 감사합니다!");
-            goHome();
         }
 
-        // Runway(via Replicate) 영상 생성 로직
-        async function generateRunwayVideo(promptText) {
-            const chatWindow = document.getElementById('chat-window');
-            
-            // 1. 대기 메시지 표시
-            appendMessage('bot', "Runway Gen-3가 당신의 이야기를 시각화하고 있습니다. 잠시만 기다려 주세요...");
-            
-            try {
-                // 실제 구현 시: 본인의 서버 API 엔드포인트로 요청
-                // 서버에서는 Replicate API를 통해 Runway 모델을 실행합니다.
-                const response = await fetch('/api/generate-video', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        prompt: promptText,
-                        model: "runwayml/gen-3-alpha" 
-                    })
-                });
-        
-                const data = await response.json();
-                
-                // 2. 영상 출력을 위한 HTML 생성
-                if (data.videoUrl) {
-                    const videoContainer = document.createElement('div');
-                    videoContainer.style = "margin-top: 15px; background: #000; border-radius: 12px; overflow: hidden;";
-                    
-                    videoContainer.innerHTML = `
-                        <video controls style="width: 100%; display: block;">
-                            <source src="${data.videoUrl}" type="video/mp4">
-                            브라우저가 영상을 지원하지 않습니다.
-                        </video>
-                        <div style="padding: 10px; background: #333; color: white; font-size: 12px; text-align: center;">
-                            ✨ Runway Gen-3 Alpha로 생성됨
-                        </div>
-                    `;
-                    chatWindow.appendChild(videoContainer);
-                    chatWindow.scrollTop = chatWindow.scrollHeight;
-        
-                    // 3. RQ1(협상)을 위한 피드백 영역 활성화
-                    showNegotiationUI();
-                }
-            } catch (err) {
-                console.error("Runway Generation Error:", err);
-                appendMessage('bot', "영상 생성 중 통신 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
-            }
-        }
-
-        function showNegotiationUI() {
-            const chatWindow = document.getElementById('chat-window');
-            const feedbackDiv = document.createElement('div');
-            feedbackDiv.style = "margin-top: 20px; border: 1px dashed #ccc; padding: 15px; border-radius: 10px; background: #fff8f0;";
-            
-            feedbackDiv.innerHTML = `
-                <p style="margin: 0 0 10px 0; font-size: 13px; font-weight: bold;">🧐 영상이 당신의 삶을 잘 표현하나요?</p>
-                <div style="display: flex; gap: 5px;">
-                    <button onclick="confirmVideo()" style="background: #28a745; font-size: 12px;">만족해요</button>
-                    <button onclick="requestEdit()" style="background: #ff7b00; font-size: 12px;">수정하고 싶어요</button>
-                </div>
-            `;
-            chatWindow.appendChild(feedbackDiv);
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-        }
-        
-        function requestEdit() {
-            appendMessage('bot', "어떤 부분이 본인의 모습과 다른가요? 구체적으로 말씀해주시면 다시 반영해 드릴게요.");
-            // 이 시점부터 유저의 채팅 입력은 '수정 프롬프트'로 인식되어 기록됩니다.
-        }
-
-        // 사용자의 영상 상태를 확인하기 위한 가상 DB (로컬 스토리지 활용)
-        function generateVideoWoZ() {
-            const chatInput = document.getElementById('chatInput').value;
-            appendMessage('user', "내 삶의 영상을 만들어줘.");
-            
-            // 1. 대기 메시지
-            appendMessage('bot', "당신의 서사를 분석하여 영상을 생성하고 있습니다. (예상 소요 시간: 3~5분)");
-            
-            // 2. 연구자가 확인할 수 있도록 요청 데이터를 저장
-            const requestData = {
-                userId: document.getElementById('participantId').value,
-                prompt: "사용자 대화 요약본 (여기에 GPT 요약본 전달)",
-                status: "pending",
-                timestamp: new Date().getTime()
-            };
-            localStorage.setItem('currentRequest', JSON.stringify(requestData));
-        
-            // 3. 주기적으로 영상이 준비되었는지 체크 (Polling)
-            const checkInterval = setInterval(() => {
-                const videoUrl = localStorage.getItem('videoReadyUrl');
-                if (videoUrl) {
-                    clearInterval(checkInterval);
-                    displayVideo(videoUrl);
-                    localStorage.removeItem('videoReadyUrl'); // 사용 후 삭제
-                }
-            }, 3000);
-        }
-        
-        function displayVideo(url) {
-            appendMessage('bot', "영상이 완성되었습니다! 당신의 삶이 잘 투영되었는지 확인해보세요.");
-            const chatWindow = document.getElementById('chat-window');
-            const videoHTML = `<video src="${url}" controls style="width:100%; border-radius:10px; margin-top:10px;"></video>`;
-            const div = document.createElement('div');
-            div.innerHTML = videoHTML;
-            chatWindow.appendChild(div);
-        }
-
-        // 엔터키 입력 처리 (Shift+Enter는 줄바꿈)
         function handleEnter(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 sendMessage();
             }
         }
-        
-        // 메시지 전송 및 자동 스크롤
+
         function sendMessage() {
             const input = document.getElementById('chatInput');
             const text = input.value.trim();
             if (!text) return;
-        
-            // 1. 사용자 메시지 추가
+
             appendMessage('user', text);
             input.value = "";
-            
-            // 2. 스크롤 하단으로
-            scrollToBottom();
-        
-            // 3. (임시) 봇 응답 - 나중에 여기에 GPT 연결
+
+            // 자동 응답 시뮬레이션
             setTimeout(() => {
-                appendMessage('bot', "당신의 이야기가 무척 인상적이네요. 조금 더 자세히 들려주시겠어요?");
-                scrollToBottom();
+                appendMessage('bot', "말씀해주신 내용을 바탕으로 연구자가 영상을 준비할 예정입니다. '영상 생성'을 원하시면 말씀해주세요.");
             }, 1000);
         }
-        
+
         function appendMessage(sender, text) {
             const chatWindow = document.getElementById('chat-window');
             const msgDiv = document.createElement('div');
             msgDiv.className = `msg ${sender}-msg`;
             msgDiv.innerText = text;
             chatWindow.appendChild(msgDiv);
-        }
-        
-        function scrollToBottom() {
-            const chatWindow = document.getElementById('chat-window');
             chatWindow.scrollTop = chatWindow.scrollHeight;
         }
-        
+
+        // 초기 화면 설정
+        window.onload = () => showSection('intro-section');
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
