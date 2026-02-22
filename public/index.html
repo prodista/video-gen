@@ -561,18 +561,24 @@
         
         // 3. Veo/Sora 영상 생성 함수
         async function generateVideo() {
-            alert("Veo 모델이 대화를 분석하여 영상을 생성하기 시작합니다... (약 1~2분 소요)");
-            
-            // 실제 구현 시: 
-            // 1. ChatGPT에게 대화 내용을 요약해달라고 함 (Prompt Engineering)
-            // 2. 요약된 프롬프트를 Veo API에 전송
-            // 3. 결과 영상 URL을 받아옴
+            const pId = document.getElementById('participantId').value;
+            alert("영상을 생성합니다...");
         
-            // 가상 완료 처리
-            setTimeout(() => {
-                alert("영상 생성이 완료되었습니다! 대시보드에서 확인하세요.");
-                showSection('dashboard-section');
-            }, 3000);
+            // 실제로는 여기서 AI API(Luma 등)를 호출하고 URL을 받아옴
+            const fakeVideoUrl = "https://example.com/generated-video.mp4"; 
+        
+            // 생성된 URL을 MongoDB에 저장하기 위해 백엔드 호출
+            await fetch('/api/user/update-video', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    participantId: pId,
+                    videoUrl: fakeVideoUrl
+                })
+            });
+        
+            alert("영상 저장 완료!");
+            showSection('dashboard-section');
         }
         
         // Study 1 시작 (기존의 설문 -> 온보딩 -> 채팅 흐름)
@@ -625,5 +631,6 @@
     </script>
 </body>
 </html>
+
 
 
