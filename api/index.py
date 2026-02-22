@@ -49,6 +49,33 @@ return jsonify({"status": "success"}), 200
 def handler(event, context):
 return app(event, context)
 
+@app.route('/api/user/onboarding', methods=['POST'])
+def save_user():
+    try:
+        data = request.json
+        print("수신 데이터:", data) # Vercel 로그에 찍힙니다.
+        
+        user_doc = {
+            "participantId": data.get("participantId"),
+            "anxietyFactors": data.get("anxietyFactors"),
+            "initialAnxiety": data.get("initialAnxiety"),
+            "purpose": data.get("purpose"),
+            "videoUrl": "",
+            "createdAt": data.get("createdAt")
+        }
+        
+        # 실제 DB 작업
+        result = collection.update_one(
+            {"participantId": user_doc["participantId"]},
+            {"$set": user_doc},
+            upsert=True
+        )
+        return jsonify({"status": "success", "inserted_id": str(result.upserted_id)}), 200
+    
+    except Exception as e:
+        print("에러 발생:", str(e)) # 로그에서 에러 원인 확인 가능
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 @app.get("/api/history")
 async def get_history():
 try:
@@ -57,6 +84,7 @@ try:
     return data
 except Exception as e:
     return {"error": str(e)}
+
 
 
 
