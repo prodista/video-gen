@@ -388,15 +388,64 @@
 
         async function submitOnboarding() {
             const pId = document.getElementById('participantId').value;
+            const initialAnxiety = document.getElementById('initialAnxiety').value;
+        
             if (!pId || anxietyList.length === 0) return alert("ID와 불안 요소를 입력해주세요!");
-            
-            // 대시보드 반영
-            document.getElementById('welcomeMsg').innerText = `안녕하세요, ${pId}님!`;
-            document.getElementById('avgAnxiety').innerText = document.getElementById('initialAnxiety').value;
-            document.getElementById('topKeyword').innerText = `#${anxietyList[0]}`;
-            showSection('dashboard-section');
+        
+            // 서버로 보낼 데이터 뭉치
+            const userData = {
+                participantId: pId,
+                anxietyFactors: anxietyList,
+                initialAnxiety: parseInt(initialAnxiety)
+            };
+        
+            try {
+                const response = await fetch('/api/user/onboarding', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+        
+                if (response.ok) {
+                    alert("정보가 성공적으로 저장되었습니다.");
+                    document.getElementById('welcomeMsg').innerText = `안녕하세요, ${pId}님!`;
+                    showSection('dashboard-section');
+                }
+            } catch (err) {
+                console.error("저장 실패:", err);
+            }
         }
 
+        const express = require('express');
+        const mongoose = require('mongoose');
+        const app = express();
+        
+        app.use(express.json()); // JSON 데이터를 읽기 위한 설정
+        
+        // MongoDB 연결 (본인의 URI로 교체)
+        mongoose.connect('mongodb+srv://ID:PW@cluster.mongodb.net/myDatabase');
+        
+        const userSchema = new mongoose.Schema({
+            participantId: String,
+            anxietyFactors: [String],
+            initialAnxiety: Number,
+            videoUrl: String,  // 생성된 영상 경로 저장용
+            createdAt: { type: Date, default: Date.now }
+        });
+        
+        const User = mongoose.model('User', userSchema);
+        
+        // 온보딩 데이터 저장 API
+        app.post('/api/user/onboarding', async (req, res) => {
+            try {
+                const newUser = new User(req.body);
+                await newUser.save();
+                res.status(200).send({ message: "저장 성공!" });
+            } catch (err) {
+                res.status(500).send(err);
+            }
+        });
+        
         async function loginUser() {
             const pId = document.getElementById('loginId').value.trim();
             if (!pId) { 
@@ -572,3 +621,4 @@
     </script>
 </body>
 </html>
+
