@@ -10,7 +10,7 @@ client = MongoClient(MONGO_URI)
 db = client['video_gen'] # 데이터베이스 이름
 collection = db['users']   # 컬렉션 이름
 
-@app.route('/api/user/onboarding', methods=['POST'])
+@app.route('/user/onboarding', methods=['POST'])
 def save_user():
 data = request.json
 
@@ -33,7 +33,7 @@ collection.update_one(
 return jsonify({"status": "success", "message": "Data saved"}), 200
 
 # 영상 URL만 따로 업데이트하는 API (나중에 영상 생성 후 호출)
-@app.route('/api/user/update-video', methods=['POST'])
+@app.route('/user/update-video', methods=['POST'])
 def update_video():
 data = request.json
 p_id = data.get("participantId")
@@ -49,7 +49,7 @@ return jsonify({"status": "success"}), 200
 def handler(event, context):
 return app(event, context)
 
-@app.route('/api/user/onboarding', methods=['POST'])
+@app.route('/user/onboarding', methods=['POST'])
 def save_user():
     try:
         data = request.json
@@ -76,7 +76,7 @@ def save_user():
         print("에러 발생:", str(e)) # 로그에서 에러 원인 확인 가능
         return jsonify({"status": "error", "message": str(e)}), 500
 
-@app.get("/api/history")
+@app.get("/history")
 async def get_history():
 try:
     # 기존 영상 히스토리 로드 (필요시 사용)
@@ -84,6 +84,7 @@ try:
     return data
 except Exception as e:
     return {"error": str(e)}
+
 
 
 
