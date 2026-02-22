@@ -95,22 +95,27 @@
 
         /* 채팅 섹션 전체 */
         #chat-section {
-            display: flex;
+            display: flex !important;
             flex-direction: column;
-            height: 100vh; /* 화면 꽉 채우기 */
-            max-width: 600px;
+            height: 100vh; 
+            width: 100%;
+            max-width: 500px;
             margin: 0 auto;
-            background: #fdfdfd;
+            background: #ffffff;
+            position: fixed; /* 화면에 고정 */
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
         }
         
         /* 헤더 */
         .chat-header {
-            padding: 15px;
-            background: white;
-            border-bottom: 1px solid #eee;
             display: flex;
             align-items: center;
-            gap: 15px;
+            padding: 10px 15px;
+            gap: 12px;
+            border-bottom: 1px solid #eee;
         }
         
         .chat-name { font-weight: bold; display: block; }
@@ -120,10 +125,24 @@
         .chat-messages {
             flex: 1;
             overflow-y: auto;
-            padding: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+        }
+
+        .back-btn {
+            width: 32px !important;   /* 가로 크기 제한 */
+            height: 32px !important;  /* 세로 크기 제한 */
+            padding: 0 !important;    /* 내부 여백 제거 */
+            font-size: 16px !important;
+            line-height: 32px;
+            border-radius: 50%;       /* 동그란 버튼 형태 */
+            border: 1px solid #ddd;
+            background: #f8f9fa;
+            cursor: pointer;
             display: flex;
-            flex-direction: column;
-            gap: 15px;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;           /* 크기 줄어들지 않게 고정 */
         }
         
         .msg {
@@ -321,26 +340,20 @@
             </div>
         </div>
 
-       <div id="chat-section" class="hidden">
+        <div id="chat-section">
             <div class="chat-header">
-                <button onclick="showSection('dashboard-section')" class="back-btn">←</button>
+                <button onclick="showSection('dashboard-section')" class="back-btn">〈</button>
                 <div class="chat-info">
-                    <span class="chat-name">AI 서사 가이드</span>
-                    <span class="chat-status">● 온라인</span>
+                    <span style="font-weight: bold; font-size: 15px;">AI 서사 가이드</span>
                 </div>
             </div>
         
             <div id="chat-window" class="chat-messages">
-                <div class="msg bot-msg">
-                    안녕하세요! 당신의 소중한 삶의 기록을 영상으로 만들기 위해 몇 가지 대화를 나누고 싶어요. 가장 먼저 생각나는 소중한 기억이나 가치관이 있나요?
                 </div>
-            </div>
         
             <div class="chat-input-area">
-                <textarea id="chatInput" placeholder="당신의 마음을 들려주세요..." rows="1" onkeypress="handleEnter(event)"></textarea>
-                <button onclick="sendMessage()" class="send-btn">
-                    <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
-                </button>
+                <textarea id="chatInput" placeholder="메시지를 입력하세요..."></textarea>
+                <button onclick="sendMessage()" class="send-btn">전송</button>
             </div>
         </div>
             
@@ -801,6 +814,7 @@
     </script>
 </body>
 </html>
+
 
 
 
