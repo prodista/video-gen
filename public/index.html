@@ -568,10 +568,116 @@
             alert("평가가 완료되었습니다. 감사합니다!");
             goHome();
         }
+
+        // Runway(via Replicate) 영상 생성 로직
+        async function generateRunwayVideo(promptText) {
+            const chatWindow = document.getElementById('chat-window');
+            
+            // 1. 대기 메시지 표시
+            appendMessage('bot', "Runway Gen-3가 당신의 이야기를 시각화하고 있습니다. 잠시만 기다려 주세요...");
+            
+            try {
+                // 실제 구현 시: 본인의 서버 API 엔드포인트로 요청
+                // 서버에서는 Replicate API를 통해 Runway 모델을 실행합니다.
+                const response = await fetch('/api/generate-video', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        prompt: promptText,
+                        model: "runwayml/gen-3-alpha" 
+                    })
+                });
+        
+                const data = await response.json();
+                
+                // 2. 영상 출력을 위한 HTML 생성
+                if (data.videoUrl) {
+                    const videoContainer = document.createElement('div');
+                    videoContainer.style = "margin-top: 15px; background: #000; border-radius: 12px; overflow: hidden;";
+                    
+                    videoContainer.innerHTML = `
+                        <video controls style="width: 100%; display: block;">
+                            <source src="${data.videoUrl}" type="video/mp4">
+                            브라우저가 영상을 지원하지 않습니다.
+                        </video>
+                        <div style="padding: 10px; background: #333; color: white; font-size: 12px; text-align: center;">
+                            ✨ Runway Gen-3 Alpha로 생성됨
+                        </div>
+                    `;
+                    chatWindow.appendChild(videoContainer);
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
+        
+                    // 3. RQ1(협상)을 위한 피드백 영역 활성화
+                    showNegotiationUI();
+                }
+            } catch (err) {
+                console.error("Runway Generation Error:", err);
+                appendMessage('bot', "영상 생성 중 통신 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+            }
+        }
+
+        function showNegotiationUI() {
+            const chatWindow = document.getElementById('chat-window');
+            const feedbackDiv = document.createElement('div');
+            feedbackDiv.style = "margin-top: 20px; border: 1px dashed #ccc; padding: 15px; border-radius: 10px; background: #fff8f0;";
+            
+            feedbackDiv.innerHTML = `
+                <p style="margin: 0 0 10px 0; font-size: 13px; font-weight: bold;">🧐 영상이 당신의 삶을 잘 표현하나요?</p>
+                <div style="display: flex; gap: 5px;">
+                    <button onclick="confirmVideo()" style="background: #28a745; font-size: 12px;">만족해요</button>
+                    <button onclick="requestEdit()" style="background: #ff7b00; font-size: 12px;">수정하고 싶어요</button>
+                </div>
+            `;
+            chatWindow.appendChild(feedbackDiv);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+        
+        function requestEdit() {
+            appendMessage('bot', "어떤 부분이 본인의 모습과 다른가요? 구체적으로 말씀해주시면 다시 반영해 드릴게요.");
+            // 이 시점부터 유저의 채팅 입력은 '수정 프롬프트'로 인식되어 기록됩니다.
+        }
+
+        // 사용자의 영상 상태를 확인하기 위한 가상 DB (로컬 스토리지 활용)
+        function generateVideoWoZ() {
+            const chatInput = document.getElementById('chatInput').value;
+            appendMessage('user', "내 삶의 영상을 만들어줘.");
+            
+            // 1. 대기 메시지
+            appendMessage('bot', "당신의 서사를 분석하여 영상을 생성하고 있습니다. (예상 소요 시간: 3~5분)");
+            
+            // 2. 연구자가 확인할 수 있도록 요청 데이터를 저장
+            const requestData = {
+                userId: document.getElementById('participantId').value,
+                prompt: "사용자 대화 요약본 (여기에 GPT 요약본 전달)",
+                status: "pending",
+                timestamp: new Date().getTime()
+            };
+            localStorage.setItem('currentRequest', JSON.stringify(requestData));
+        
+            // 3. 주기적으로 영상이 준비되었는지 체크 (Polling)
+            const checkInterval = setInterval(() => {
+                const videoUrl = localStorage.getItem('videoReadyUrl');
+                if (videoUrl) {
+                    clearInterval(checkInterval);
+                    displayVideo(videoUrl);
+                    localStorage.removeItem('videoReadyUrl'); // 사용 후 삭제
+                }
+            }, 3000);
+        }
+        
+        function displayVideo(url) {
+            appendMessage('bot', "영상이 완성되었습니다! 당신의 삶이 잘 투영되었는지 확인해보세요.");
+            const chatWindow = document.getElementById('chat-window');
+            const videoHTML = `<video src="${url}" controls style="width:100%; border-radius:10px; margin-top:10px;"></video>`;
+            const div = document.createElement('div');
+            div.innerHTML = videoHTML;
+            chatWindow.appendChild(div);
+        }
         
     </script>
 </body>
 </html>
+
 
 
 
