@@ -1,3 +1,4 @@
 fastapi
+flask
 pymongo
 dnspython
