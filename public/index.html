@@ -386,21 +386,51 @@
 
         document.getElementById('initialAnxiety').oninput = (e) => document.getElementById('levelDisplay').innerText = e.target.value;
 
-        async function submitOnboarding() {
+       async function submitOnboarding() {
+            console.log("버튼 클릭됨!");
+        
+            // 1. 입력값 가져오기
+            const pId = document.getElementById('participantId').value;
+            const initialAnxiety = document.getElementById('initialAnxiety').value;
+            const purpose = document.getElementById('purpose').value;
+        
+            // 2. 유효성 검사
+            if (!pId || anxietyList.length === 0) {
+                alert("ID와 불안 요소를 입력해주세요!");
+                return;
+            }
+        
+            // 3. 변수 정의 (이 부분이 에러의 원인이었습니다!)
+            // 반드시 fetch를 호출하기 전(위쪽)에 정의되어야 합니다.
+            const userData = {
+                participantId: pId,
+                anxietyFactors: anxietyList,
+                initialAnxiety: parseInt(initialAnxiety),
+                purpose: purpose,
+                createdAt: new Date().toISOString()
+            };
+        
+            console.log("데이터 준비 완료:", userData);
         
             try {
-                const response = await fetch('/api/user/onboarding', { 
+                // 4. 서버로 전송 (위에서 만든 userData를 여기서 사용)
+                const response = await fetch('/api/user/onboarding', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(userData)
+                    body: JSON.stringify(userData) // 이제 userData가 정의되어 있어 에러가 나지 않습니다.
                 });
-                
-                if (response.status === 404) {
-                    console.error("404 에러 발생: 서버 주소를 다시 확인하세요.");
+        
+                if (response.ok) {
+                    console.log("저장 성공");
+                    document.getElementById('welcomeMsg').innerText = `안녕하세요, ${pId}님!`;
+                    showSection('dashboard-section');
+                } else {
+                    console.error("서버 응답 에러:", response.status);
+                    alert("서버 저장 실패 (코드: " + response.status + ")");
                 }
-                // ...
             } catch (err) {
-                console.error(err);
+                console.error("네트워크 에러:", err);
+                alert("서버와 연결할 수 없습니다.");
             }
         }
         
