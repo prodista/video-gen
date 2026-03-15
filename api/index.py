@@ -16,6 +16,16 @@ client = MongoClient(MONGO_URI)
 db = client['video_gen'] # 데이터베이스 이름
 collection = db['users']   # 컬렉션 이름
 
+@app.post("/user/onboarding")
+async def save_user(request: Request):
+    data = await request.json()
+    return {"status": "success"}
+
+@app.post("/room/join")
+async def join_room(request: Request):
+    data = await request.json()
+    return {"status": "joined"}
+
 @app.route('/user/onboarding', methods=['POST'])
 def save_user():
     try:
