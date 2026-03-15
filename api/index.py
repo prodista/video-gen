@@ -27,11 +27,11 @@ async def get_user(participant_id: str):
     else:
         return JSONResponse(status_code=404, content={"message": "User not found"})
 
-@app.get("/api/health")
+@app.get("/health")
 def health_check():
     return {"status": "ok", "message": "FastAPI is running"}
 
-@app.post("/api/user/onboarding")
+@app.post("/user/onboarding")
 async def save_user(request: Request):
     try:
         data = await request.json()
@@ -52,7 +52,7 @@ async def save_user(request: Request):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
-@app.get("/api/history")
+@app.get("/history")
 async def get_history():
     try:
         data = list(collection.find({}, {"_id": 0}).sort("_id", -1).limit(10))
