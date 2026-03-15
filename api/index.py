@@ -5,6 +5,7 @@ import os
 
 app = FastAPI()
 
+# CORS 설정
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -12,6 +13,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# MongoDB 연결
 MONGO_URI = os.environ.get("MONGODB_URI")
 client = MongoClient(MONGO_URI)
 db = client['video_gen']
@@ -42,7 +44,7 @@ async def save_user(request: Request):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
-@app.get("/history")
+@app.get("/api/history")
 async def get_history():
     try:
         data = list(collection.find({}, {"_id": 0}).sort("_id", -1).limit(10))
