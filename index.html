@@ -387,8 +387,6 @@
         document.getElementById('initialAnxiety').oninput = (e) => document.getElementById('levelDisplay').innerText = e.target.value;
 
         async function submitOnboarding() {
-            console.log("버튼 클릭됨!");
-        
             const pId = document.getElementById('participantId').value;
             const initialAnxiety = document.getElementById('initialAnxiety').value;
             const purpose = document.getElementById('purpose').value;
@@ -406,7 +404,8 @@
                 createdAt: new Date().toISOString()
             };
         
-            try {.
+            try {
+                // ❗ 수정: 'try { .' 의 점을 지우고 경로 확인
                 const response = await fetch('/api/user/onboarding', { 
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -414,18 +413,15 @@
                 });
         
                 if (response.ok) {
-                    console.log("저장 성공");
                     document.getElementById('welcomeMsg').innerText = `안녕하세요, ${pId}님!`;
                     showSection('dashboard-section');
                 } else {
-                    // 에러 메시지를 더 자세히 보기 위해
                     const errorData = await response.json();
-                    console.error("서버 응답 에러:", errorData);
-                    alert("서버 저장 실패: " + (errorData.message || response.status));
+                    alert("저장 실패: " + (errorData.message || response.status));
                 }
             } catch (err) {
                 console.error("네트워크 에러:", err);
-                alert("서버와 연결할 수 없습니다. 주소를 확인해주세요.");
+                alert("서버와 연결할 수 없습니다.");
             }
         }
         
