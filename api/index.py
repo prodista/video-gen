@@ -1,8 +1,11 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from pymongo import MongoClient
+import os
 
 app = FastAPI()
 
+# CORS 설정 (프론트엔드 통신 허용)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -10,66 +13,41 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Vercel 환경 변수에서 가져오기
+# MongoDB 연결
 MONGO_URI = os.environ.get("MONGODB_URI")
 client = MongoClient(MONGO_URI)
-db = client['video_gen'] # 데이터베이스 이름
-collection = db['users']   # 컬렉션 이름
+db = client['video_gen']
+collection = db['users']
 
-@app.post("/user/onboarding")
+@app.get("/api/health")
+def health_check():
+    return {"status": "ok", "message": "FastAPI is running"}
+
+@app.post("/api/user/onboarding")
 async def save_user(request: Request):
-    data = await request.json()
-    return {"status": "success"}
-
-@app.post("/room/join")
-async def join_room(request: Request):
-    data = await request.json()
-    return {"status": "joined"}
-
-@app.route('/user/onboarding', methods=['POST'])
-def save_user():
     try:
-        data = request.json
-        print("수신 데이터:", data) # Vercel 로그 확인용
-        
-        if not data:
-            return jsonify({"status": "error", "message": "No data received"}), 400
-
+        data = await request.json()
         user_doc = {
             "participantId": data.get("participantId"),
             "anxietyFactors": data.get("anxietyFactors"),
             "initialAnxiety": data.get("initialAnxiety"),
             "purpose": data.get("purpose"),
-            "videoUrl": data.get("videoUrl", ""), # 기존 URL 유지 혹은 빈값
+            "videoUrl": "",
             "createdAt": data.get("createdAt")
         }
-        
-        # participantId가 이미 있다면 업데이트, 없으면 새로 삽입 (Upsert)
-        result = collection.update_one(
+        collection.update_one(
             {"participantId": user_doc["participantId"]},
             {"$set": user_doc},
             upsert=True
         )
-        return jsonify({"status": "success", "inserted_id": str(result.upserted_id)}), 200
-    
+        return {"status": "success"}
     except Exception as e:
-        print("에러 발생:", str(e))
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return {"status": "error", "message": str(e)}
 
-@app.route('/user/update-video', methods=['POST'])
-def update_video():
-    try:
-        data = request.json
-        p_id = data.get("participantId")
-        v_url = data.get("videoUrl")
-
-        collection.update_one(
-            {"participantId": p_id},
-            {"$set": {"videoUrl": v_url}}
-        )
-        return jsonify({"status": "success"}), 200
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+# Vercel용 핸들러 (FastAPI는 필요 없지만 안전하게 추가)
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
 
 @app.route("/history", methods=['GET'])
 def get_history():
