@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pymongo import MongoClient
 import os
 
@@ -19,7 +20,12 @@ client = MongoClient(MONGO_URI)
 db = client['video_gen']
 collection = db['users']
 
-@app.get("/user/{participant_id}")
+@app.get("/api/health")
+def health_check():
+    return {"status": "ok", "message": "FastAPI is running"}
+
+# 1. 로그인/조회 (HTML의 fetch('/api/user/${pId}')와 매칭)
+@app.get("/api/user/{participant_id}")
 async def get_user(participant_id: str):
     user = collection.find_one({"participantId": participant_id}, {"_id": 0})
     if user:
@@ -27,18 +33,15 @@ async def get_user(participant_id: str):
     else:
         return JSONResponse(status_code=404, content={"message": "User not found"})
 
-@app.get("/api/health")
-def health_check():
-    return {"status": "ok", "message": "FastAPI is running"}
-
-@app.post("/user/onboarding")
+# 2. 온보딩 저장 (HTML의 fetch('/api/user/onboarding')와 매칭)
+@app.post("/api/user/onboarding")
 async def save_user(request: Request):
     try:
         data = await request.json()
         user_doc = {
             "participantId": data.get("participantId"),
             "anxietyFactors": data.get("anxietyFactors"),
-            "initialAnxiety": data.get("initialAnxiety"),
+            "initialAnxiety": int(data.get("initialAnxiety", 5)),
             "purpose": data.get("purpose"),
             "videoUrl": "",
             "createdAt": data.get("createdAt")
@@ -50,15 +53,31 @@ async def save_user(request: Request):
         )
         return {"status": "success"}
     except Exception as e:
-        return {"status": "error", "message": str(e)}
+        return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
 
-@app.get("/history")
+# 3. 영상 URL 업데이트 (HTML의 fetch('/api/user/update-video')와 매칭)
+@app.post("/api/user/update-video")
+async def update_video(request: Request):
+    try:
+        data = await request.json()
+        p_id = data.get("participantId")
+        v_url = data.get("videoUrl")
+        
+        collection.update_one(
+            {"participantId": p_id},
+            {"$set": {"videoUrl": v_url}}
+        )
+        return {"status": "success"}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
+
+@app.get("/api/history")
 async def get_history():
     try:
         data = list(collection.find({}, {"_id": 0}).sort("_id", -1).limit(10))
         return data
     except Exception as e:
-        return {"error": str(e)}
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
 @app.get("/")
 def read_root():
