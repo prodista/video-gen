@@ -1,8 +1,14 @@
-from flask import Flask, request, jsonify
-from pymongo import MongoClient
-import os
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 
-app = Flask(__name__)
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Vercel 환경 변수에서 가져오기
 MONGO_URI = os.environ.get("MONGODB_URI")
