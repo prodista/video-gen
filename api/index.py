@@ -19,7 +19,7 @@ client = MongoClient(MONGO_URI)
 db = client['video_gen']
 collection = db['users']
 
-@app.get("/api/user/{participant_id}")
+@app.get("/user/{participant_id}")
 async def get_user(participant_id: str):
     user = collection.find_one({"participantId": participant_id}, {"_id": 0})
     if user:
