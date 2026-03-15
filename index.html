@@ -386,22 +386,18 @@
 
         document.getElementById('initialAnxiety').oninput = (e) => document.getElementById('levelDisplay').innerText = e.target.value;
 
-       async function submitOnboarding() {
+        async function submitOnboarding() {
             console.log("버튼 클릭됨!");
         
-            // 1. 입력값 가져오기
             const pId = document.getElementById('participantId').value;
             const initialAnxiety = document.getElementById('initialAnxiety').value;
             const purpose = document.getElementById('purpose').value;
         
-            // 2. 유효성 검사
             if (!pId || anxietyList.length === 0) {
                 alert("ID와 불안 요소를 입력해주세요!");
                 return;
             }
         
-            // 3. 변수 정의 (이 부분이 에러의 원인이었습니다!)
-            // 반드시 fetch를 호출하기 전(위쪽)에 정의되어야 합니다.
             const userData = {
                 participantId: pId,
                 anxietyFactors: anxietyList,
@@ -410,10 +406,8 @@
                 createdAt: new Date().toISOString()
             };
         
-            console.log("데이터 준비 완료:", userData);
-        
-            try {
-                const response = await fetch('/api/user/onboarding', {
+            try {.
+                const response = await fetch('/user/onboarding', { 
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(userData)
@@ -424,12 +418,14 @@
                     document.getElementById('welcomeMsg').innerText = `안녕하세요, ${pId}님!`;
                     showSection('dashboard-section');
                 } else {
-                    console.error("서버 응답 에러:", response.status);
-                    alert("서버 저장 실패 (코드: " + response.status + ")");
+                    // 에러 메시지를 더 자세히 보기 위해
+                    const errorData = await response.json();
+                    console.error("서버 응답 에러:", errorData);
+                    alert("서버 저장 실패: " + (errorData.message || response.status));
                 }
             } catch (err) {
                 console.error("네트워크 에러:", err);
-                alert("서버와 연결할 수 없습니다.");
+                alert("서버와 연결할 수 없습니다. 주소를 확인해주세요.");
             }
         }
         
