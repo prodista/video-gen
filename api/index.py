@@ -21,7 +21,7 @@ collection = db['users']
 def health_check():
     return {"status": "ok", "message": "FastAPI is running"}
 
-@app.post("/user/onboarding")
+@app.post("/api/user/onboarding")
 async def save_user(request: Request):
     try:
         data = await request.json()
