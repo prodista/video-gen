@@ -27,7 +27,7 @@ async def get_user(participant_id: str):
     else:
         return JSONResponse(status_code=404, content={"message": "User not found"})
 
-@app.get("/health")
+@app.get("/api/health")
 def health_check():
     return {"status": "ok", "message": "FastAPI is running"}
 
