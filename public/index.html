@@ -690,6 +690,64 @@
             chatWindow.appendChild(msgDiv);
         }
 
+        function renderMessageToContainer(msg) {
+            const chatWindow = document.getElementById('chat-window');
+            const myId = document.getElementById('participantId').value;
+            const isMyMsg = (msg.senderId === myId);
+        
+            // 1. 전체를 감싸는 한 줄(Row) 컨테이너 생성
+            const messageRow = document.createElement('div');
+            messageRow.style.display = "flex";
+            messageRow.style.flexDirection = "column";
+            messageRow.style.alignItems = isMyMsg ? "flex-end" : "flex-start";
+            messageRow.style.width = "100%";
+        
+            // 2. 이름 태그 (누가 보냈는지 표시)
+            const senderName = document.createElement('span');
+            senderName.innerText = msg.senderId;
+            senderName.style.fontSize = "11px";
+            senderName.style.color = "#888";
+            senderName.style.marginBottom = "3px";
+            senderName.style.padding = "0 5px";
+            messageRow.appendChild(senderName);
+        
+            // 3. 실제 말풍선 div
+            const bubble = document.createElement('div');
+            bubble.style.maxWidth = "80%";
+            bubble.style.padding = "12px 15px";
+            bubble.style.fontSize = "14px";
+            bubble.style.lineHeight = "1.4";
+            bubble.style.position = "relative";
+            bubble.style.boxShadow = "0 1px 2px rgba(0,0,0,0.1)";
+        
+            if (isMyMsg) {
+                bubble.style.background = "#007bff"; // 본인 메시지 파란색
+                bubble.style.color = "white";
+                bubble.style.borderRadius = "15px 15px 0 15px";
+            } else {
+                bubble.style.background = "#ffffff"; // 상대방 메시지 흰색
+                bubble.style.color = "#333";
+                bubble.style.border = "1px solid #eee";
+                bubble.style.borderRadius = "15px 15px 15px 0";
+            }
+        
+            // 4. 말풍선 내부에 텍스트와 [영상 생성] 버튼 추가
+            bubble.innerHTML = `
+                <div style="word-break: break-all;">${msg.text}</div>
+                <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid ${isMyMsg ? 'rgba(255,255,255,0.3)' : '#eee'}; text-align: right;">
+                    <button onclick="requestVideoGen('${msg._id}', '${msg.text.replace(/'/g, "\\'")}')" 
+                            style="width:auto; padding:3px 8px; font-size:10px; background:#ff7b00; color:white; border:none; border-radius:4px; cursor:pointer;">
+                        🎬 영상 생성 지시
+                    </button>
+                </div>
+            `;
+        
+            messageRow.appendChild(bubble);
+        
+            // 5. 최종적으로 컨테이너(chat-window)에 추가
+            chatWindow.appendChild(messageRow);
+        }
+
         // 영상 생성 요청 (실험 데이터 기록용)
         function requestVideoGen(msgId, text) {
             if (confirm(`"${text}" 내용을 바탕으로 AI 영상을 생성하시겠습니까?`)) {
