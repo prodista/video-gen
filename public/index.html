@@ -645,24 +645,20 @@
 
         // 서버에서 메시지 가져와서 화면에 그리기
         async function fetchMessages() {
-            try {
-                const response = await fetch(`/api/chat/receive/${currentRoomId}`);
-                if (response.ok) {
-                    const messages = await response.json();
-                    const chatWindow = document.getElementById('chat-window');
-                    const myId = document.getElementById('participantId').value;
-                    
-                    chatWindow.innerHTML = ""; // 화면 초기화 (성능 최적화 필요 시 append 로직으로 변경 가능)
-                    
-                    messages.forEach(msg => {
-                        const isMyMsg = msg.senderId === myId;
-                        appendMessageToUI(msg, isMyMsg);
-                    });
-                    
-                    chatWindow.scrollTop = chatWindow.scrollHeight; // 항상 최하단 스크롤
-                }
-            } catch (err) {
-                console.error("채팅 업데이트 실패:", err);
+            const response = await fetch(`/api/chat/receive/${currentRoomId}`);
+            if (response.ok) {
+                const messages = await response.json();
+                const chatWindow = document.getElementById('chat-window');
+                
+                // 이전 내용 지우기 (전체 갱신형)
+                chatWindow.innerHTML = ""; 
+                
+                messages.forEach(msg => {
+                    renderMessageToContainer(msg); // 위에서 만든 함수 호출
+                });
+                
+                // 스크롤 하단 고정
+                chatWindow.scrollTop = chatWindow.scrollHeight;
             }
         }
 
