@@ -2,6 +2,8 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pymongo import MongoClient
+from datetime import datetime
+from bson import ObjectId
 import os
 
 app = FastAPI()
@@ -84,24 +86,33 @@ async def get_history():
 def read_root():
     return {"Hello": "World"}
 
-# 메시지 보내기
+# 채팅 메시지 보내기
 @app.post("/api/chat/send")
 async def send_message(request: Request):
-    data = await request.json()
-    message_doc = {
-        "roomId": data.get("roomId"),
-        "senderId": data.get("senderId"),
-        "text": data.get("text"),
-        "timestamp": datetime.utcnow()
-    }
-    db['messages'].insert_one(message_doc)
-    return {"status": "success"}
+    try:
+        data = await request.json()
+        message_doc = {
+            "roomId": data.get("roomId"),
+            "senderId": data.get("senderId"),
+            "text": data.get("text"),
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        # DB의 'messages' 컬렉션에 저장
+        result = db['messages'].insert_one(message_doc)
+        
+        # 생성된 고유 메시지 ID 반환 (나중에 영상 생성 시 특정할 수 있음)
+        return {"status": "success", "messageId": str(result.inserted_id)}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
 
-# 메시지 가져오기
+# 채팅 메시지 리스트 가져오기 (폴링용)
 @app.get("/api/chat/receive/{room_id}")
 async def get_messages(room_id: str):
-    # 최신 메시지 50개 가져오기
-    messages = list(db['messages'].find({"roomId": room_id}).sort("timestamp", 1))
-    for msg in messages:
-        msg["_id"] = str(msg["_id"]) # ObjectId를 문자열로 변환
-    return messages
+    try:
+        # 해당 방의 메시지들을 시간순(오름차순)으로 정렬하여 50개 가져옴
+        messages = list(db['messages'].find({"roomId": room_id}).sort("timestamp", 1).limit(50))
+        for msg in messages:
+            msg["_id"] = str(msg["_id"]) # JSON 변환을 위해 문자열로 변경
+        return messages
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
