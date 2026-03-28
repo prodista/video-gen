@@ -191,30 +191,31 @@
         let anxietyList = [];
         let myChart = null;
 
-    // 채팅 활성화 함수
-    function startChatExperiment() {
-        // 1. 참여자 ID 가져오기 (전송 시 senderId로 사용됨)
-        const pId = document.getElementById('participantId').value;
+        // 대화 세션 시작 함수
+        function startChatSession() {
+            const pId = document.getElementById('participantId').value;
+            
+            if (!pId) {
+                alert("참여 아이디를 확인해주세요.");
+                showSection('login-section');
+                return;
+            }
         
-        if (!pId) {
-            alert("참여 아이디를 확인할 수 없습니다. 첫 페이지로 이동합니다.");
-            showSection('login-section'); 
-            return;
+            // 1. 화면 전환
+            showSection('chat-section');
+        
+            // 2. ⭐ 상태 저장: 'chat_log' 단계로 기록
+            // 새로고침해도 이 단계로 바로 들어오게 하는 표식입니다.
+            localStorage.setItem('currentStep', 'chat_log');
+        
+            // 3. 실시간 대화 업데이트 시작
+            if (window.chatInterval) clearInterval(window.chatInterval);
+            
+            fetchMessages(); // 즉시 한번 가져오기
+            window.chatInterval = setInterval(fetchMessages, 3000); // 3초마다 반복
+            
+            console.log(`[실험 기록] ${pId} 님이 'chat_log' 단계에 진입했습니다.`);
         }
-    
-        // 2. 화면 전환 (채팅 섹션으로)
-        showSection('chat-section');
-        console.log(`[실험 시작] 참여자: ${pId}, 방 번호: ${currentRoomId}`);
-    
-        // 3. 기존에 돌고 있을지 모르는 인터벌 초기화 (중복 방지)
-        if (window.chatPollingInterval) {
-            clearInterval(window.chatPollingInterval);
-        }
-    
-        // 4. 즉시 메시지 로드 후, 3초마다 반복 실행 (Polling)
-        fetchMessages(); 
-        window.chatPollingInterval = setInterval(fetchMessages, 3000); 
-    }
 
         // 섹션 전환 함수
         function showSection(sectionId) {
