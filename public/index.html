@@ -238,10 +238,19 @@
             </div>
         </div>
 
-        <div id="chat-section" class="hidden">
-            <div style="display: flex; align-items: center; margin-bottom: 20px; gap: 10px;">
-                <button onclick="showSection('dashboard-section')" style="width: auto; padding: 8px 12px; background: #f0f0f0; color: #333; margin: 0;">←</button>
-                <h2 style="margin: 0;">마음 나누기</h2>
+            <div id="chat-section" class="hidden">
+                <div style="display: flex; align-items: center; margin-bottom: 20px; gap: 10px;">
+                    <button onclick="showSection('dashboard-section')" style="width: auto; padding: 8px 12px; background: #f0f0f0; color: #333; margin: 0;">←</button>
+                    <h2 style="margin: 0;">마음 나누기 (실험중)</h2>
+                </div>
+            
+                <div id="chat-window" style="height: 500px; overflow-y: auto; border: 1px solid #eee; border-radius: 16px; padding: 15px; background: #fafafa; margin-bottom: 15px; display: flex; flex-direction: column; gap: 15px;">
+                    </div>
+            
+                <div class="input-group">
+                    <input type="text" id="chatInput" placeholder="메시지를 입력하세요..." onkeypress="if(event.key==='Enter') sendMessage()">
+                    <button onclick="sendMessage()" class="add-btn" style="background: var(--primary-color);">전송</button>
+                </div>
             </div>
         
             <div id="chat-window" style="height: 400px; overflow-y: auto; border: 1px solid #eee; border-radius: 16px; padding: 15px; background: #fafafa; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px;">
