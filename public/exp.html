@@ -120,26 +120,6 @@
                 <button onclick="loginUser()" style="background: #6c757d; padding: 12px;">기록 불러오기</button>
             </div>
         </div>
-
-        <div id="survey-section" class="hidden">
-            <div id="survey-intro">
-                <h2>처음이시군요!</h2>
-                <p style="color: #666; line-height: 1.6;">
-                    반갑습니다. 서비스를 시작하기 전에,<br>
-                    당신에 대해 조금 더 알고 싶어요.<br>
-                    잠시 설문조사에 응해주시겠어요?
-                </p>
-                <button onclick="startActualQuestions()" style="background:#28a745; margin-top: 20px;">네, 좋아요!</button>
-            </div>
-        
-            <div id="survey-container" class="hidden">
-                <div id="survey-content"></div>
-                <div class="input-group" style="margin-top: 30px;">
-                    <button id="prevBtn" style="background: #6c757d; flex: 1;">이전</button>
-                    <button id="nextBtn" style="background: #007bff; flex: 1;">다음</button>
-                </div>
-            </div>
-        </div>
         
         <div id="onboarding-section" class="hidden">
             <h2>거의 다 됐어요!</h2>
@@ -201,7 +181,7 @@
                 <button onclick="sendMessage()" class="add-btn" style="background: var(--primary-color);">전송</button>
             </div>
         </div>
-            
+
     </div>
 
     <script>
@@ -211,13 +191,7 @@
         let anxietyList = [];
         let myChart = null;
 
-        const surveyQuestions = [
-            { question: "요즘 잠은 잘 주무시나요?", options: ["매우 잘 잠", "보통", "자주 깨거나 못 잠"] },
-            { question: "하루 중 가장 불안한 시간대는?", options: ["아침", "오후", "밤/자기 전"] },
-            { question: "불안할 때 나타나는 증상은?", options: ["두근거림", "호흡 곤란", "근육 긴장", "없음"] }
-        ];
-
-    // Study 1 진입 및 채팅 활성화 함수
+    // 채팅 활성화 함수
     function startChatExperiment() {
         // 1. 참여자 ID 가져오기 (전송 시 senderId로 사용됨)
         const pId = document.getElementById('participantId').value;
@@ -244,7 +218,7 @@
 
         // 섹션 전환 함수
         function showSection(sectionId) {
-            const sections = ['login-section', 'onboarding-section', 'dashboard-section', 'chat-section'];
+            const sections = ['intro-section', 'onboarding-section', 'dashboard-section', 'chat-section'];
             sections.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.add('hidden');
@@ -259,68 +233,6 @@
                 currentQuestionIndex = 0;
                 userAnswers = [];
                 showSection('intro-section');
-            }
-        }
-
-        window.onpopstate = (e) => showSection(e.state?.sectionId || 'intro-section', true);
-
-        // --- 설문 로직 ---
-        function goToSurveyIntro() {
-            showSection('survey-section');
-            document.getElementById('survey-intro').classList.remove('hidden');
-            document.getElementById('survey-container').classList.add('hidden');
-        }
-
-        function startActualQuestions() {
-            document.getElementById('survey-intro').classList.add('hidden');
-            document.getElementById('survey-container').classList.remove('hidden');
-            renderSurvey();
-        }
-
-        function renderSurvey() {
-            const content = document.getElementById('survey-content');
-            const nextBtn = document.getElementById('nextBtn');
-            const prevBtn = document.getElementById('prevBtn');
-            const data = surveyQuestions[currentQuestionIndex];
-
-            content.innerHTML = `
-                <h3>Q${currentQuestionIndex + 1}.</h3>
-                <p style="font-weight:bold;">${data.question}</p>
-                ${data.options.map(opt => `
-                    <button class="survey-option ${userAnswers[currentQuestionIndex] === opt ? 'selected' : ''}" 
-                            onclick="selectOption('${opt}')" style="background:white; color:#333; border:1px solid #ddd; text-align:left;">
-                        ${opt}
-                    </button>
-                `).join('')}
-            `;
-
-            // 이전 버튼: 첫 질문이면 goHome으로 연결
-            prevBtn.innerText = currentQuestionIndex === 0 ? "처음으로" : "이전";
-            prevBtn.onclick = currentQuestionIndex === 0 ? goHome : prevSurvey;
-            
-            nextBtn.disabled = !userAnswers[currentQuestionIndex];
-            nextBtn.innerText = currentQuestionIndex === surveyQuestions.length - 1 ? "완료" : "다음";
-            nextBtn.onclick = nextSurvey;
-        }
-
-        function selectOption(opt) {
-            userAnswers[currentQuestionIndex] = opt;
-            renderSurvey();
-        }
-
-        function nextSurvey() {
-            if (currentQuestionIndex < surveyQuestions.length - 1) {
-                currentQuestionIndex++;
-                renderSurvey();
-            } else {
-                showSection('onboarding-section');
-            }
-        }
-
-        function prevSurvey() {
-            if (currentQuestionIndex > 0) {
-                currentQuestionIndex--;
-                renderSurvey();
             }
         }
 
