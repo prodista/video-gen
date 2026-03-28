@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <title>Anxiety Eliminator</title>
+    <title>Chat</title>
     <style>
         :root {
             --primary-color: #007bff;
@@ -97,11 +97,11 @@
 </head>
 <body>
     <div class="container">
-        <div class="home-link" onclick="goHome()">🏠 Anxiety Eliminator</div>
+        <div class="home-link" onclick="goHome()">🏠 Chat</div>
 
         <div id="intro-section">
             <div style="text-align: center; margin-bottom: 30px;">
-                <h1 style="color: var(--primary-color); font-size: 28px; margin-bottom: 10px;">Anxiety Eliminator</h1>
+                <h1 style="color: var(--primary-color); font-size: 28px; margin-bottom: 10px;">Chat</h1>
                 <p style="color: #666; font-size: 15px; line-height: 1.5;">
                     본 플랫폼은 생성형 AI가 매개한 영상 서사가<br>
                     타인에 대한 이해와 공감을 어떻게 촉진하는지 연구합니다.
@@ -109,15 +109,9 @@
             </div>
         
             <div class="card" style="border: 2px solid #eef2ff;">
-                <h3 style="margin-top: 0; color: #28a745;">Study 1. 자전적 서사 시각화</h3>
-                <p style="font-size: 14px; color: #555;">자신의 가치관과 삶의 경험을 AI와 협업하여 영상으로 제작하고, 표현의 적절성을 검증합니다.</p>
+                <h3 style="margin-top: 0; color: #28a745;">신규 가입</h3>
+                <p style="font-size: 14px; color: #555;">지금 대화를 시작해보세요!</p>
                 <button onclick="startStudy1()" style="background:#28a745;">내 영상 제작 시작하기</button>
-            </div>
-        
-            <div class="card" style="border: 2px solid #f8faff;">
-                <h3 style="margin-top: 0; color: var(--primary-color);">Study 2. 타인 이해 효과 검증</h3>
-                <p style="font-size: 14px; color: #555;">AI로 생성된 타인의 영상 서사를 시청하고, 해당 인물에 대한 공감과 이해도를 측정합니다.</p>
-                <button onclick="startStudy2()" style="background: var(--primary-color);">타인 영상 평가 시작하기</button>
             </div>
         
             <div style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
@@ -223,28 +217,43 @@
             { question: "불안할 때 나타나는 증상은?", options: ["두근거림", "호흡 곤란", "근육 긴장", "없음"] }
         ];
 
-        function showSection(sectionId, isBack = false) {
-            const sections = [
-                'intro-section',
-                'survey-section',
-                'onboarding-section',
-                'dashboard-section',
-                'chat-section',
-                'study2-section'];
-            
+    // Study 1 진입 및 채팅 활성화 함수
+    function startChatExperiment() {
+        // 1. 참여자 ID 가져오기 (전송 시 senderId로 사용됨)
+        const pId = document.getElementById('participantId').value;
+        
+        if (!pId) {
+            alert("참여 아이디를 확인할 수 없습니다. 첫 페이지로 이동합니다.");
+            showSection('login-section'); 
+            return;
+        }
+    
+        // 2. 화면 전환 (채팅 섹션으로)
+        showSection('chat-section');
+        console.log(`[실험 시작] 참여자: ${pId}, 방 번호: ${currentRoomId}`);
+    
+        // 3. 기존에 돌고 있을지 모르는 인터벌 초기화 (중복 방지)
+        if (window.chatPollingInterval) {
+            clearInterval(window.chatPollingInterval);
+        }
+    
+        // 4. 즉시 메시지 로드 후, 3초마다 반복 실행 (Polling)
+        fetchMessages(); 
+        window.chatPollingInterval = setInterval(fetchMessages, 3000); 
+    }
+
+        // 섹션 전환 함수
+        function showSection(sectionId) {
+            const sections = ['login-section', 'onboarding-section', 'dashboard-section', 'chat-section'];
             sections.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.add('hidden');
             });
-        
+            
             const target = document.getElementById(sectionId);
             if (target) target.classList.remove('hidden');
-            
-            if (!isBack) {
-                history.pushState({ sectionId: sectionId }, '', `#${sectionId}`);
-            }
         }
-
+        
         function goHome() {
             if (confirm("처음 화면으로 돌아가시겠습니까?")) {
                 currentQuestionIndex = 0;
