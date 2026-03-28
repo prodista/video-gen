@@ -71,6 +71,7 @@ async def update_video(request: Request):
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
 
+# 히스토리 불러오기
 @app.get("/api/history")
 async def get_history():
     try:
@@ -82,3 +83,25 @@ async def get_history():
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
+
+# 메시지 보내기
+@app.post("/api/chat/send")
+async def send_message(request: Request):
+    data = await request.json()
+    message_doc = {
+        "roomId": data.get("roomId"),
+        "senderId": data.get("senderId"),
+        "text": data.get("text"),
+        "timestamp": datetime.utcnow()
+    }
+    db['messages'].insert_one(message_doc)
+    return {"status": "success"}
+
+# 메시지 가져오기
+@app.get("/api/chat/receive/{room_id}")
+async def get_messages(room_id: str):
+    # 최신 메시지 50개 가져오기
+    messages = list(db['messages'].find({"roomId": room_id}).sort("timestamp", 1))
+    for msg in messages:
+        msg["_id"] = str(msg["_id"]) # ObjectId를 문자열로 변환
+    return messages
