@@ -402,9 +402,6 @@
         
         app.use(express.json()); // JSON 데이터를 읽기 위한 설정
         
-        // MongoDB 연결 (본인의 URI로 교체)
-        mongoose.connect('mongodb+srv://ID:PW@cluster.mongodb.net/myDatabase');
-        
         const userSchema = new mongoose.Schema({
             participantId: String,
             anxietyFactors: [String],
