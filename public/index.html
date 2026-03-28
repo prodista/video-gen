@@ -252,22 +252,6 @@
                 <button onclick="sendMessage()" class="add-btn" style="background: var(--primary-color);">전송</button>
             </div>
         </div>
-    
-        <div id="chat-window" style="height: 400px; overflow-y: auto; border: 1px solid #eee; border-radius: 16px; padding: 15px; background: #fafafa; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px;">
-            <div class="bot-msg" style="background: #eef2ff; padding: 10px 15px; border-radius: 15px 15px 15px 0; align-self: flex-start; max-width: 85%; font-size: 14px;">
-                안녕하세요. 오늘 어떤 마음이 당신을 힘들게 하나요? 당신의 불안을 함께 들여다보고, Veo로 특별한 위로 영상을 만들어 드릴게요.
-            </div>
-        </div>
-    
-        <div class="input-group">
-            <input type="text" id="chatInput" placeholder="당신의 마음을 적어주세요..." onkeypress="if(event.key==='Enter') sendMessage()">
-            <button onclick="sendMessage()" class="add-btn" style="background: var(--primary-color);">전송</button>
-        </div>
-    
-        <div id="video-gen-area" class="hidden" style="margin-top: 20px; text-align: center;">
-            <p style="font-size: 13px; color: #666;">대화를 바탕으로 위로 영상을 만들 준비가 되었습니다.</p>
-            <button onclick="generateVideo()" style="background: #ff7b00;">✨ Veo로 힐링 영상 생성하기</button>
-        </div>
             
     </div>
 
