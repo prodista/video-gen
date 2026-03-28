@@ -89,21 +89,10 @@ def read_root():
 # 채팅 메시지 보내기
 @app.post("/api/chat/send")
 async def send_message(request: Request):
-    try:
-        data = await request.json()
-        message_doc = {
-            "roomId": data.get("roomId"),
-            "senderId": data.get("senderId"),
-            "text": data.get("text"),
-            "timestamp": datetime.utcnow().isoformat()
-        }
-        # DB의 'messages' 컬렉션에 저장
-        result = db['messages'].insert_one(message_doc)
-        
-        # 생성된 고유 메시지 ID 반환 (나중에 영상 생성 시 특정할 수 있음)
-        return {"status": "success", "messageId": str(result.inserted_id)}
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
+    data = await request.json()
+    # 여기서 전해받은 데이터를 몽고디비에 넣음
+    db['messages'].insert_one(data) 
+    return {"status": "success"}
 
 # 채팅 메시지 리스트 가져오기 (폴링용)
 @app.get("/api/chat/receive/{room_id}")
