@@ -611,6 +611,70 @@
             alert("평가가 완료되었습니다. 감사합니다!");
             goHome();
         }
+
+        let currentRoomId = "1004"; // 실험용 방 번호
+        let lastMessageCount = 0;
+        
+        // 대화 시작 시 주기적 조회를 켭니다.
+        function startConversation() {
+            showSection('chat-section');
+            
+            // 3초마다 서버에서 새 메시지가 있는지 확인 (Polling)
+            setInterval(fetchMessages, 3000); 
+        }
+
+        async function fetchMessages() {
+            try {
+                const response = await fetch(`/api/chat/receive/${currentRoomId}`);
+                if (response.ok) {
+                    const messages = await response.json();
+                    
+                    // 새로운 메시지가 있을 때만 화면 갱신 (성능 최적화)
+                    if (messages.length !== lastMessageCount) {
+                        const chatWindow = document.getElementById('chat-window');
+                        chatWindow.innerHTML = ""; // 화면 비우기
+                        
+                        messages.forEach(msg => {
+                            const isMyMsg = msg.senderId === document.getElementById('participantId').value;
+                            renderSingleMessage(msg, isMyMsg);
+                        });
+                        
+                        lastMessageCount = messages.length;
+                        chatWindow.scrollTop = chatWindow.scrollHeight; // 스크롤 하단 고정
+                    }
+                }
+            } catch (err) {
+                console.error("채팅 로드 실패:", err);
+            }
+        }
+
+        // 개별 말풍선을 그리는 함수 (영상 생성 버튼 포함)
+        function renderSingleMessage(msg, isMyMsg) {
+            const chatWindow = document.getElementById('chat-window');
+            const msgDiv = document.createElement('div');
+            
+            // 기본 스타일링
+            msgDiv.style = isMyMsg 
+                ? "background: var(--primary-color); color: white; padding: 10px 15px; border-radius: 15px 15px 0 15px; align-self: flex-end; max-width: 85%; font-size: 14px; position: relative;"
+                : "background: #eef2ff; color: #333; padding: 10px 15px; border-radius: 15px 15px 15px 0; align-self: flex-start; max-width: 85%; font-size: 14px; position: relative;";
+        
+            // 텍스트 내용 + 영상 생성용 버튼 부착
+            msgDiv.innerHTML = `
+                <div>${msg.text}</div>
+                <div style="text-align: right; margin-top: 5px;">
+                    <button onclick="requestAIVideo('${msg._id}', '${msg.text}')" style="width:auto; padding:3px 8px; font-size:11px; background:#ff7b00; margin:0; border-radius:6px;">🎬 영상 생성</button>
+                </div>
+            `;
+            
+            chatWindow.appendChild(msgDiv);
+        }
+
+        function requestAIVideo(messageId, text) {
+            if (confirm(`'${text}' 내용으로 AI 영상을 생성하시겠습니까?`)) {
+                alert(`메시지 ID [${messageId}]에 대한 AI 영상 생성을 시작합니다.\n논문 데이터 기록에 포함됩니다.`);
+                // 여기에 향후 Veo/Sora 서버 API로 전송하는 fetch를 붙이면 됩니다!
+            }
+        }
         
     </script>
 </body>
