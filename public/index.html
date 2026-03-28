@@ -509,23 +509,29 @@
         // 2. 메시지 전송 함수
         async function sendMessage() {
             const input = document.getElementById('chatInput');
-            const chatWindow = document.getElementById('chat-window');
             const text = input.value.trim();
+            const myId = document.getElementById('participantId').value;
         
-            if (!text) return;
+            if (!text || !myId) return;
         
-            // 사용자 메시지 표시
-            appendMessage('user', text);
-            input.value = "";
+            try {
+                const response = await fetch('/api/chat/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        roomId: currentRoomId,
+                        senderId: myId,
+                        text: text
+                    })
+                });
         
-            // 대화 중에는 영상 생성 버튼 보이기 (예시: 첫 메시지 이후 바로 노출)
-            document.getElementById('video-gen-area').classList.remove('hidden');
-        
-            // [여기에 ChatGPT API 연동]
-            // 지금은 데모용 자동 응답
-            setTimeout(() => {
-                appendMessage('bot', `당신이 느끼는 '${text}'에 대한 불안을 이해해요. 그 상황을 아름다운 영상으로 바꾸어 시각화해 드릴게요.`);
-            }, 800);
+                if (response.ok) {
+                    input.value = "";
+                    fetchMessages(); // 보낸 즉시 새로고침
+                }
+            } catch (err) {
+                alert("전송 실패!");
+            }
         }
         
         function appendMessage(sender, text) {
