@@ -97,40 +97,37 @@
 </head>
 <body>
     <div class="container">
-        <div class="home-link" onclick="goHome()">🏠 Chat</div>
+        <div class="home-link" onclick="goHome()">🏠 시작 화면으로</div>
 
-        <div id="intro-section" class="container">
-            <div style="text-align: center; margin-bottom: 30px;">
-                <h1 style="color: var(--primary-color); font-size: 22px;">연구 참여 시스템</h1>
+        <div id="intro-section"> <div style="text-align: center; margin-bottom: 30px; padding-top: 40px;">
+                <h1 style="color: var(--primary-color); font-size: 22px;">Prototype</h1>
                 <p style="color: #666; font-size: 13px;">배정받은 방 번호와 비밀번호를 입력하세요.</p>
             </div>
         
-            <div class="input-group" style="display: flex; flex-direction: column; gap: 15px;">
+            <div style="display: flex; flex-direction: column; gap: 15px;">
                 <div>
                     <label style="display: block; font-size: 11px; color: #888; margin-bottom: 5px;">참여자 ID</label>
-                    <input type="text" id="participantId" placeholder="예: 1111" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                    <input type="text" id="participantId" placeholder="예: 1111">
                 </div>
         
                 <div>
                     <label style="display: block; font-size: 11px; color: #888; margin-bottom: 5px;">방 번호 (숫자만)</label>
-                    <input type="number" id="roomNumber" placeholder="예: 1" min="1" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                    <input type="number" id="roomNumber" placeholder="예: 1" min="1">
                 </div>
         
                 <div>
                     <label style="display: block; font-size: 11px; color: #888; margin-bottom: 5px;">방 비밀번호</label>
-                    <input type="password" id="roomPassword" placeholder="참여자님께서 정하실 비밀번호" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                    <input type="password" id="roomPassword" placeholder="사용하실 비밀번호">
                 </div>
         
-                <button onclick="handleLogin()" style="width: 100%; padding: 15px; background: var(--primary-color); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px;">
-                    실험 입장하기
-                </button>
+                <button onclick="handleLogin()">실험 입장하기</button>
             </div>
         </div>
 
         <div id="chat-section" class="hidden">
             <div style="display: flex; align-items: center; margin-bottom: 20px; gap: 10px;">
                 <button onclick="showSection('dashboard-section')" style="width: auto; padding: 8px 12px; background: #f0f0f0; color: #333; margin: 0;">←</button>
-                <h2 style="margin: 0;">마음 나누기 (실험중)</h2>
+                <h2 style="margin: 0;">1대1 대화</h2>
             </div>
         
             <div id="chat-window" style="height: 500px; overflow-y: auto; border: 1px solid #eee; border-radius: 16px; padding: 15px; background: #fafafa; margin-bottom: 15px; display: flex; flex-direction: column; gap: 15px;">
