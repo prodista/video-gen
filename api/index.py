@@ -26,6 +26,26 @@ collection = db['users']
 def health_check():
     return {"status": "ok", "message": "FastAPI is running"}
 
+@app.post("/api/room/check")
+async def check_room(request: Request):
+    data = await request.json()
+    room_id = data.get("roomId")
+    input_pw = data.get("password")
+    
+    # DB에서 해당 방 정보를 찾음
+    room = db['rooms'].find_one({"roomId": room_id})
+    
+    if not room:
+        # 방이 없으면 새로 생성 (처음 들어온 유저가 비번 결정)
+        db['rooms'].insert_one({"roomId": room_id, "password": input_pw})
+        return {"status": "created", "message": "새로운 방이 생성되었습니다."}
+    else:
+        # 방이 있으면 비번 비교
+        if room['password'] == input_pw:
+            return {"status": "success", "message": "입장 성공"}
+        else:
+            return JSONResponse(status_code=401, content={"status": "fail", "message": "비밀번호가 틀립니다."})
+
 # 1. 로그인/조회 (HTML의 fetch('/api/user/${pId}')와 매칭)
 @app.get("/api/user/{participant_id}")
 async def get_user(participant_id: str):
