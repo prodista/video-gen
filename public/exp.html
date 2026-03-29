@@ -168,7 +168,7 @@
             const rPw = document.getElementById('roomPassword').value.trim();
         
             if (!pId || !rNum || !rPw) {
-                alert("ID, 방 번호, 비밀번호를 모두 입력해주세요.");
+                alert("모든 정보를 입력해주세요.");
                 return;
             }
         
@@ -184,15 +184,10 @@
                 const result = await response.json();
         
                 if (response.ok) {
-                    // 정보 저장
                     window.currentParticipantId = pId;
                     window.currentRoomId = roomId;
-                    localStorage.setItem('pId', pId);
-                    localStorage.setItem('roomId', roomId);
                     
-                    alert(result.message);
-                    
-                    // ✅ 온보딩/대시보드 건너뛰고 바로 채팅 세션 시작
+                    // 로그인 성공 시 즉시 대화 세션 시작
                     startChatSession(); 
                 } else {
                     alert(result.message);
@@ -204,20 +199,19 @@
         
         // 대화 세션 시작 함수
         function startChatSession() {
-            // 섹션 전환
             showSection('chat-section');
             
-            // 상태 기록 (새로고침 시 복구용)
+            // 로컬 스토리지에 현재 상태 저장
+            localStorage.setItem('pId', window.currentParticipantId);
+            localStorage.setItem('roomId', window.currentRoomId);
             localStorage.setItem('currentStep', 'chat_log');
         
-            // 기존에 돌고 있던 인터벌이 있다면 중지
-            if (window.chatInterval) clearInterval(window.chatInterval);
-            
-            // 즉시 메시지 로드 후 3초마다 반복
+            // [중요] 입장하자마자 과거 대화 내용을 먼저 불러옴
             fetchMessages(); 
+        
+            // 그 후 3초마다 실시간 업데이트 시작
+            if (window.chatInterval) clearInterval(window.chatInterval);
             window.chatInterval = setInterval(fetchMessages, 3000);
-            
-            console.log(`[실험 시작] 방: ${window.currentRoomId}, 참여자: ${window.currentParticipantId}`);
         }
 
         // 섹션 전환 함수
@@ -266,14 +260,18 @@
                     const messages = await response.json();
                     const chatWindow = document.getElementById('chat-window');
                     
-                    chatWindow.innerHTML = ""; // 전체 갱신
+                    // 💡 팁: 새 메시지가 있을 때만 화면을 갱신하거나 스크롤을 내리도록 최적화 가능
+                    // 현재는 단순하게 전체 리스트를 다시 그립니다.
+                    chatWindow.innerHTML = ""; 
                     messages.forEach(msg => {
                         renderMessageToContainer(msg);
                     });
+        
+                    // 가장 최근 대화(맨 아래)로 스크롤 이동
                     chatWindow.scrollTop = chatWindow.scrollHeight;
                 }
             } catch (err) {
-                console.error("메시지 동기화 실패:", err);
+                console.error("데이터 동기화 중 오류:", err);
             }
         }
         
@@ -372,61 +370,36 @@
             chatWindow.appendChild(msgDiv);
         }
 
+        // 메시지 렌더링 함수
         function renderMessageToContainer(msg) {
             const chatWindow = document.getElementById('chat-window');
-            const myId = document.getElementById('participantId').value;
-            const isMyMsg = (msg.senderId === myId);
+            const isMyMsg = (msg.senderId === window.currentParticipantId);
         
-            // 1. 전체를 감싸는 한 줄(Row) 컨테이너 생성
             const messageRow = document.createElement('div');
             messageRow.style.display = "flex";
             messageRow.style.flexDirection = "column";
             messageRow.style.alignItems = isMyMsg ? "flex-end" : "flex-start";
             messageRow.style.width = "100%";
+            messageRow.style.marginBottom = "10px";
         
-            // 2. 이름 태그 (누가 보냈는지 표시)
             const senderName = document.createElement('span');
             senderName.innerText = msg.senderId;
-            senderName.style.fontSize = "11px";
-            senderName.style.color = "#888";
-            senderName.style.marginBottom = "3px";
-            senderName.style.padding = "0 5px";
+            senderName.style = "font-size: 11px; color: #888; margin: 0 5px 3px 5px;";
             messageRow.appendChild(senderName);
         
-            // 3. 실제 말풍선 div
             const bubble = document.createElement('div');
-            bubble.style.maxWidth = "80%";
-            bubble.style.padding = "12px 15px";
-            bubble.style.fontSize = "14px";
-            bubble.style.lineHeight = "1.4";
-            bubble.style.position = "relative";
-            bubble.style.boxShadow = "0 1px 2px rgba(0,0,0,0.1)";
-        
-            if (isMyMsg) {
-                bubble.style.background = "#007bff"; // 본인 메시지 파란색
-                bubble.style.color = "white";
-                bubble.style.borderRadius = "15px 15px 0 15px";
-            } else {
-                bubble.style.background = "#ffffff"; // 상대방 메시지 흰색
-                bubble.style.color = "#333";
-                bubble.style.border = "1px solid #eee";
-                bubble.style.borderRadius = "15px 15px 15px 0";
-            }
-        
-            // 4. 말풍선 내부에 텍스트와 [영상 생성] 버튼 추가
+            bubble.className = isMyMsg ? "user-msg" : "bot-msg"; // 기존 CSS 사용
             bubble.innerHTML = `
                 <div style="word-break: break-all;">${msg.text}</div>
-                <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid ${isMyMsg ? 'rgba(255,255,255,0.3)' : '#eee'}; text-align: right;">
+                <div style="margin-top: 8px; text-align: right;">
                     <button onclick="requestVideoGen('${msg._id}', '${msg.text.replace(/'/g, "\\'")}')" 
-                            style="width:auto; padding:3px 8px; font-size:10px; background:#ff7b00; color:white; border:none; border-radius:4px; cursor:pointer;">
-                        🎬 영상 생성 지시
+                            style="width:auto; padding:2px 6px; font-size:10px; background:#ff7b00; color:white; border:none; border-radius:4px; cursor:pointer;">
+                        🎬 영상 생성
                     </button>
                 </div>
             `;
         
             messageRow.appendChild(bubble);
-        
-            // 5. 최종적으로 컨테이너(chat-window)에 추가
             chatWindow.appendChild(messageRow);
         }
 
