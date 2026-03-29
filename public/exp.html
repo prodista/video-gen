@@ -154,9 +154,11 @@
             const savedRoom = localStorage.getItem('roomId');
             const savedStep = localStorage.getItem('currentStep');
         
+            // 채팅 단계(chat_log)였고 정보가 남아있다면 즉시 복구
             if (savedId && savedRoom && savedStep === 'chat_log') {
                 window.currentParticipantId = savedId;
                 window.currentRoomId = savedRoom;
+                console.log("기존 세션을 복구합니다:", window.currentRoomId);
                 startChatSession(); 
             }
         };
@@ -187,13 +189,17 @@
                     window.currentParticipantId = pId;
                     window.currentRoomId = roomId;
                     
-                    // 로그인 성공 시 즉시 대화 세션 시작
+                    // 로컬 스토리지 저장 (새로고침 대비)
+                    localStorage.setItem('pId', pId);
+                    localStorage.setItem('roomId', roomId);
+                    localStorage.setItem('currentStep', 'chat_log');
+        
                     startChatSession(); 
                 } else {
                     alert(result.message);
                 }
             } catch (err) {
-                alert("서버 연결에 실패했습니다.");
+                alert("서버 연결 실패");
             }
         }
         
@@ -205,7 +211,10 @@
             localStorage.setItem('pId', window.currentParticipantId);
             localStorage.setItem('roomId', window.currentRoomId);
             localStorage.setItem('currentStep', 'chat_log');
-        
+
+            // 기존에 돌고 있던 인터벌이 있다면 중지 (중복 실행 방지)
+            if (window.chatInterval) clearInterval(window.chatInterval);
+            
             // [중요] 입장하자마자 과거 대화 내용을 먼저 불러옴
             fetchMessages(); 
         
@@ -228,7 +237,16 @@
 
         // 홈 버튼 함수
         function goHome() {
-            if (confirm("처음 화면으로 돌아가시겠습니까?")) {
+            if (confirm("대화방에서 나가시겠습니까? (진행 상태는 저장됩니다)")) {
+                // 실시간 업데이트 중지 (배터리/메모리 절약)
+                if (window.chatInterval) {
+                    clearInterval(window.chatInterval);
+                    window.chatInterval = null;
+                }
+                
+                // 상태값 초기화 (완전히 로그아웃 시키려면 removeItem 사용)
+                // localStorage.removeItem('currentStep'); 
+                
                 showSection('intro-section');
             }
         }
@@ -376,25 +394,27 @@
             const isMyMsg = (msg.senderId === window.currentParticipantId);
         
             const messageRow = document.createElement('div');
-            messageRow.style.display = "flex";
-            messageRow.style.flexDirection = "column";
-            messageRow.style.alignItems = isMyMsg ? "flex-end" : "flex-start";
-            messageRow.style.width = "100%";
-            messageRow.style.marginBottom = "10px";
+            messageRow.style = `display: flex; flex-direction: column; width: 100%; margin-bottom: 12px; align-items: ${isMyMsg ? 'flex-end' : 'flex-start'};`;
         
-            const senderName = document.createElement('span');
-            senderName.innerText = msg.senderId;
-            senderName.style = "font-size: 11px; color: #888; margin: 0 5px 3px 5px;";
-            messageRow.appendChild(senderName);
+            // 발신자 이름
+            const nameLabel = document.createElement('div');
+            nameLabel.innerText = msg.senderId;
+            nameLabel.style = "font-size: 11px; color: #888; margin: 0 5px 4px 5px;";
+            messageRow.appendChild(nameLabel);
         
+            // 말풍선
             const bubble = document.createElement('div');
-            bubble.className = isMyMsg ? "user-msg" : "bot-msg"; // 기존 CSS 사용
+            bubble.className = isMyMsg ? "user-msg" : "bot-msg";
+            bubble.style.maxWidth = "80%";
+            bubble.style.position = "relative";
+            
+            // 내용 + 영상 생성 버튼
             bubble.innerHTML = `
                 <div style="word-break: break-all;">${msg.text}</div>
-                <div style="margin-top: 8px; text-align: right;">
+                <div style="margin-top: 8px; padding-top: 5px; border-top: 1px solid ${isMyMsg ? 'rgba(255,255,255,0.2)' : '#eee'};">
                     <button onclick="requestVideoGen('${msg._id}', '${msg.text.replace(/'/g, "\\'")}')" 
                             style="width:auto; padding:2px 6px; font-size:10px; background:#ff7b00; color:white; border:none; border-radius:4px; cursor:pointer;">
-                        🎬 영상 생성
+                        🎬 영상 지시
                     </button>
                 </div>
             `;
