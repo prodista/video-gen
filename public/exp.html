@@ -149,8 +149,21 @@
         // --- 전역 변수 ---
         window.currentParticipantId = ""; 
         window.currentRoomId = ""; 
-        let chatInterval = null;
+        window.chatInterval = null;
 
+        // 페이지 로드 시 기존 세션 복구
+        window.onload = function() {
+            const savedId = localStorage.getItem('pId');
+            const savedRoom = localStorage.getItem('roomId');
+            const savedStep = localStorage.getItem('currentStep');
+        
+            if (savedId && savedRoom && savedStep === 'chat_log') {
+                window.currentParticipantId = savedId;
+                window.currentRoomId = savedRoom;
+                startChatSession(); 
+            }
+        };
+        
         // 로그인 처리 (방 번호 + 비밀번호 검증)
         async function handleLogin() {
             const pId = document.getElementById('participantId').value.trim();
@@ -158,11 +171,10 @@
             const rPw = document.getElementById('roomPassword').value.trim();
         
             if (!pId || !rNum || !rPw) {
-                alert("참여자 ID, 방 번호, 비밀번호를 모두 입력해주세요.");
+                alert("ID, 방 번호, 비밀번호를 모두 입력해주세요.");
                 return;
             }
         
-            // 서버에 보낼 방 ID 형식 (예: room_1)
             const roomId = `room_${rNum}`;
         
             try {
@@ -175,53 +187,45 @@
                 const result = await response.json();
         
                 if (response.ok) {
-                    // 로그인 정보 전역 변수 및 로컬 스토리지 저장
+                    // 정보 저장
                     window.currentParticipantId = pId;
                     window.currentRoomId = roomId;
                     localStorage.setItem('pId', pId);
                     localStorage.setItem('roomId', roomId);
-                    localStorage.setItem('currentStep', 'onboarding'); // 온보딩 단계 기록
-        
+                    
                     alert(result.message);
-                    showSection('chat-section'); 
+                    
+                    // ✅ 온보딩/대시보드 건너뛰고 바로 채팅 세션 시작
+                    startChatSession(); 
                 } else {
-                    alert(result.message); // 비밀번호 불일치 알림
+                    alert(result.message);
                 }
             } catch (err) {
-                console.error(err);
                 alert("서버 연결에 실패했습니다.");
             }
         }
         
         // 대화 세션 시작 함수
         function startChatSession() {
-            const pId = document.getElementById('participantId').value;
-            
-            if (!pId) {
-                alert("참여 아이디를 확인해주세요.");
-                showSection('login-section');
-                return;
-            }
-        
-            // 1. 화면 전환
+            // 섹션 전환
             showSection('chat-section');
-        
-            // 2. ⭐ 상태 저장: 'chat_log' 단계로 기록
-            // 새로고침해도 이 단계로 바로 들어오게 하는 표식입니다.
+            
+            // 상태 기록 (새로고침 시 복구용)
             localStorage.setItem('currentStep', 'chat_log');
         
-            // 3. 실시간 대화 업데이트 시작
+            // 기존에 돌고 있던 인터벌이 있다면 중지
             if (window.chatInterval) clearInterval(window.chatInterval);
             
-            fetchMessages(); // 즉시 한번 가져오기
-            window.chatInterval = setInterval(fetchMessages, 3000); // 3초마다 반복
+            // 즉시 메시지 로드 후 3초마다 반복
+            fetchMessages(); 
+            window.chatInterval = setInterval(fetchMessages, 3000);
             
-            console.log(`[실험 기록] ${pId} 님이 'chat_log' 단계에 진입했습니다.`);
+            console.log(`[실험 시작] 방: ${window.currentRoomId}, 참여자: ${window.currentParticipantId}`);
         }
 
         // 섹션 전환 함수
         function showSection(sectionId) {
-            const sections = ['intro-section', 'chat-section'];
+            const sections = ['intro-section', 'chat-section']; 
             sections.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.add('hidden');
@@ -253,6 +257,27 @@
             if (chatInterval) clearInterval(chatInterval);
             fetchMessages(); 
             chatInterval = setInterval(fetchMessages, 3000);
+        }
+
+        // 메시지 수신 로직 (방 번호 동적 반영)
+        async function fetchMessages() {
+            if (!window.currentRoomId) return;
+        
+            try {
+                const response = await fetch(`/api/chat/receive/${window.currentRoomId}`);
+                if (response.ok) {
+                    const messages = await response.json();
+                    const chatWindow = document.getElementById('chat-window');
+                    
+                    chatWindow.innerHTML = ""; // 전체 갱신
+                    messages.forEach(msg => {
+                        renderMessageToContainer(msg);
+                    });
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                }
+            } catch (err) {
+                console.error("메시지 동기화 실패:", err);
+            }
         }
         
         // 메시지 전송 (전역 변수의 roomId와 senderId 사용)
@@ -324,27 +349,6 @@
         
             alert("영상 저장 완료!");
             showSection('dashboard-section');
-        }
-
-        // 메시지 수신 로직 (방 번호 동적 반영)
-        async function fetchMessages() {
-            if (!window.currentRoomId) return;
-        
-            try {
-                const response = await fetch(`/api/chat/receive/${window.currentRoomId}`);
-                if (response.ok) {
-                    const messages = await response.json();
-                    const chatWindow = document.getElementById('chat-window');
-                    
-                    chatWindow.innerHTML = ""; 
-                    messages.forEach(msg => {
-                        renderMessageToContainer(msg);
-                    });
-                    chatWindow.scrollTop = chatWindow.scrollHeight;
-                }
-            } catch (err) {
-                console.error("메시지 로드 실패:", err);
-            }
         }
 
         // 화면에 말풍선과 [영상 생성] 버튼 그리기
