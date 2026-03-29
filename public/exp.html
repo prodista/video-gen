@@ -126,52 +126,6 @@
                 </button>
             </div>
         </div>
-        
-        <div id="onboarding-section" class="hidden">
-            <h2>거의 다 됐어요!</h2>
-            <label>ID 설정</label>
-            <input type="text" id="participantId" placeholder="사용하실 ID를 입력하세요">
-
-            <label>불안 요소 (추가 버튼을 눌러주세요)</label>
-            <div class="input-group">
-                <input type="text" id="anxietyInput" placeholder="예: 직장, 건강, 미래">
-                <button type="button" class="add-btn" onclick="addAnxietyTag()">추가</button>
-            </div>
-            <div id="anxietyTagsContainer" class="tag-container"></div>
-
-            <label>현재 불안 수치: <span id="levelDisplay">5</span></label>
-            <input type="range" id="initialAnxiety" min="1" max="10" value="5">
-
-            <label>사용 목적</label>
-            <select id="purpose">
-                <option value="care">감정 정리</option>
-                <option value="positive">미래를 긍정적으로 상상하기</option>
-                <option value="pattern">불안 패턴 파악</option>
-            </select>
-
-            <button onclick="submitOnboarding()">시작하기</button>
-        </div>
-
-        <div id="dashboard-section" class="hidden">
-            <h2 id="welcomeMsg">안녕하세요!</h2>
-            <div class="card">
-                <p>📊 평균 불안 수치: <span id="avgAnxiety" style="font-weight:bold; color:red;">-</span></p>
-                <p>🏷 주요 키워드: <span id="topKeyword" style="font-weight:bold; color:blue;">-</span></p>
-            </div>
-            <div style="margin-top: 20px;">
-                <p style="font-weight: bold;">🎥 최근 영상</p>
-                <div id="recentVideos" style="display: flex; gap: 10px; overflow-x: auto;">
-                    <div class="thumb-placeholder">기록 없음</div>
-                </div>
-            </div>
-            <div style="margin-top: 25px;">
-                <button onclick="toggleTracking()" style="background:#28a745;">📊 나의 변화 확인하기 (트래킹)</button>
-                <button onclick="startConversation()" style="background:#ff7b00; margin-top:12px;">💬 오늘의 대화 시작하기</button>
-            </div>
-            <div id="tracking-section" class="hidden" style="margin-top:20px;">
-                <canvas id="anxietyChart"></canvas>
-            </div>
-        </div>
 
         <div id="chat-section" class="hidden">
             <div style="display: flex; align-items: center; margin-bottom: 20px; gap: 10px;">
@@ -191,19 +145,24 @@
     </div>
 
     <script>
-        // --- 전역 변수 ---
-        let myChart = null;
 
+        // --- 전역 변수 ---
+        window.currentParticipantId = ""; 
+        window.currentRoomId = ""; 
+        let chatInterval = null;
+
+        // 로그인 처리 (방 번호 + 비밀번호 검증)
         async function handleLogin() {
             const pId = document.getElementById('participantId').value.trim();
             const rNum = document.getElementById('roomNumber').value.trim();
             const rPw = document.getElementById('roomPassword').value.trim();
         
             if (!pId || !rNum || !rPw) {
-                alert("모든 정보를 입력해주세요.");
+                alert("참여자 ID, 방 번호, 비밀번호를 모두 입력해주세요.");
                 return;
             }
         
+            // 서버에 보낼 방 ID 형식 (예: room_1)
             const roomId = `room_${rNum}`;
         
             try {
@@ -216,18 +175,20 @@
                 const result = await response.json();
         
                 if (response.ok) {
-                    // 로그인 정보 로컬 저장
+                    // 로그인 정보 전역 변수 및 로컬 스토리지 저장
                     window.currentParticipantId = pId;
                     window.currentRoomId = roomId;
-                    
-                    alert(result.status === "created" ? "방을 새로 만들었습니다!" : "방에 입장합니다.");
-                    
-                    // 다음 단계(온보딩)로 이동
-                    showSection('onboarding-section'); 
+                    localStorage.setItem('pId', pId);
+                    localStorage.setItem('roomId', roomId);
+                    localStorage.setItem('currentStep', 'onboarding'); // 온보딩 단계 기록
+        
+                    alert(result.message);
+                    showSection('chat-section'); 
                 } else {
-                    alert(result.message); // "비밀번호가 틀립니다" 등 출력
+                    alert(result.message); // 비밀번호 불일치 알림
                 }
             } catch (err) {
+                console.error(err);
                 alert("서버 연결에 실패했습니다.");
             }
         }
@@ -260,7 +221,7 @@
 
         // 섹션 전환 함수
         function showSection(sectionId) {
-            const sections = ['intro-section', 'onboarding-section', 'dashboard-section', 'chat-section'];
+            const sections = ['intro-section', 'chat-section'];
             sections.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.add('hidden');
@@ -269,66 +230,62 @@
             const target = document.getElementById(sectionId);
             if (target) target.classList.remove('hidden');
         }
-        
+
+        // 홈 버튼 함수
         function goHome() {
             if (confirm("처음 화면으로 돌아가시겠습니까?")) {
                 showSection('intro-section');
             }
         }
-
-        async function submitOnboarding() {
         
-            try {
-                const response = await fetch('/api/user/onboarding', { 
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(userData)
-                });
-                
-                if (response.status === 404) {
-                    console.error("404 에러 발생: 서버 주소를 다시 확인하세요.");
-                }
-                // ...
-            } catch (err) {
-                console.error(err);
-            }
-        }
-        
-        // 1. 대화 시작 함수
+        // 대화 시작 및 Polling 설정 함수
         function startConversation() {
-            console.log("대화 시작!"); // 디버깅용
-            showSection('chat-section');
-            
-            // 채팅창 진입 시 초기 메시지 세팅 (선택 사항)
-            const chatWindow = document.getElementById('chat-window');
-            if (chatWindow.children.length <= 1) { // 메시지가 초기 메시지 하나뿐이라면
-                // 추가 로직 필요 시 여기에 작성
+            if (!window.currentRoomId) {
+                alert("방 정보가 없습니다. 다시 로그인해주세요.");
+                showSection('intro-section');
+                return;
             }
+        
+            showSection('chat-section');
+            localStorage.setItem('currentStep', 'chat_log'); // 'chat_log' 단계 저장
+        
+            // 기존 인터벌 제거 후 3초 주기로 재시작
+            if (chatInterval) clearInterval(chatInterval);
+            fetchMessages(); 
+            chatInterval = setInterval(fetchMessages, 3000);
         }
         
-        // 2. 메시지 전송 함수
+        // 메시지 전송 (전역 변수의 roomId와 senderId 사용)
         async function sendMessage() {
             const input = document.getElementById('chatInput');
             const text = input.value.trim();
-            const myId = document.getElementById('participantId').value;
+            
+            // 전역 변수에서 가져옴 (input 필드 의존성 제거)
+            const myId = window.currentParticipantId;
+            const roomId = window.currentRoomId;
         
             if (!text) return;
         
-            // 서버(FastAPI)의 저장 경로로 데이터를 보냄
-            const response = await fetch('/api/chat/send', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    roomId: "room101", // 실험용 방 ID
-                    senderId: myId,
-                    text: text
-                })
-            });
+            try {
+                const response = await fetch('/api/chat/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        roomId: roomId,   // 사용자가 입력했던 방 번호
+                        senderId: myId,   // 사용자가 입력했던 ID
+                        text: text
+                                })
+                });
         
-            if (response.ok) {
-                input.value = ""; // 성공 시 입력창 비우기
-            } else {
-                alert("서버 저장에 실패했습니다.");
+                if (response.ok) {
+                    input.value = "";
+                    // 전송 후 즉시 업데이트해서 본인 글 확인
+                    fetchMessages(); 
+                } else {
+                    alert("메시지 전송에 실패했습니다.");
+                }
+            } catch (err) {
+                alert("네트워크 오류가 발생했습니다.");
             }
         }
         
@@ -369,37 +326,24 @@
             showSection('dashboard-section');
         }
 
-        let lastMessageCount = 0;
-        let chatInterval = null;
-        
-        // 대화창 열기
-        function startConversation() {
-            showSection('chat-section');
-            
-            // 이미 실행 중인 인터벌이 있다면 제거
-            if (chatInterval) clearInterval(chatInterval);
-            
-            // 3초마다 새 메시지 확인
-            chatInterval = setInterval(fetchMessages, 3000); 
-            fetchMessages(); // 진입 시 즉시 한 번 호출
-        }
-
-        // 서버에서 메시지 가져와서 화면에 그리기
+        // 메시지 수신 로직 (방 번호 동적 반영)
         async function fetchMessages() {
-            const response = await fetch(`/api/chat/receive/${currentRoomId}`);
-            if (response.ok) {
-                const messages = await response.json();
-                const chatWindow = document.getElementById('chat-window');
-                
-                // 이전 내용 지우기 (전체 갱신형)
-                chatWindow.innerHTML = ""; 
-                
-                messages.forEach(msg => {
-                    renderMessageToContainer(msg); // 위에서 만든 함수 호출
-                });
-                
-                // 스크롤 하단 고정
-                chatWindow.scrollTop = chatWindow.scrollHeight;
+            if (!window.currentRoomId) return;
+        
+            try {
+                const response = await fetch(`/api/chat/receive/${window.currentRoomId}`);
+                if (response.ok) {
+                    const messages = await response.json();
+                    const chatWindow = document.getElementById('chat-window');
+                    
+                    chatWindow.innerHTML = ""; 
+                    messages.forEach(msg => {
+                        renderMessageToContainer(msg);
+                    });
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                }
+            } catch (err) {
+                console.error("메시지 로드 실패:", err);
             }
         }
 
