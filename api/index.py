@@ -42,10 +42,7 @@ async def save_user(request: Request):
         data = await request.json()
         user_doc = {
             "participantId": data.get("participantId"),
-            "anxietyFactors": data.get("anxietyFactors"),
-            "initialAnxiety": int(data.get("initialAnxiety", 5)),
             "purpose": data.get("purpose"),
-            "videoUrl": "",
             "createdAt": data.get("createdAt")
         }
         collection.update_one(
