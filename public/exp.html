@@ -192,11 +192,37 @@
 
     <script>
         // --- 전역 변수 ---
-        let currentQuestionIndex = 0;
-        let userAnswers = [];
-        let anxietyList = [];
         let myChart = null;
 
+        function handleLogin() {
+            const pId = document.getElementById('participantId').value.trim();
+            const rNum = document.getElementById('roomNumber').value.trim();
+            const rPw = document.getElementById('roomPassword').value.trim();
+        
+            // 1. 빈칸 검사
+            if (!pId || !rNum || !rPw) {
+                alert("모든 정보를 정확히 입력해주세요.");
+                return;
+            }
+        
+            // 2. 실험용 고정 비밀번호 설정 (예: 1234)
+            // 논문 실험 시 특정 방 번호에 맞는 비밀번호를 서버에서 검증할 수도 있습니다.
+            if (rPw !== "1234") { 
+                alert("방 비밀번호가 일치하지 않습니다.");
+                return;
+            }
+        
+            // 3. 전역 변수에 저장 (나중에 채팅 보낼 때 사용)
+            window.currentParticipantId = pId;
+            window.currentRoomId = `room_${rNum}`;
+        
+            console.log(`[로그인 성공] ID: ${pId}, Room: ${window.currentRoomId}`);
+        
+            // 4. 온보딩 혹은 대화방으로 이동
+            // 처음 참여하는 유저라면 온보딩으로, 아니라면 바로 대화방으로 보낼 수 있습니다.
+            showSection('onboarding-section'); 
+        }
+        
         // 대화 세션 시작 함수
         function startChatSession() {
             const pId = document.getElementById('participantId').value;
@@ -237,29 +263,9 @@
         
         function goHome() {
             if (confirm("처음 화면으로 돌아가시겠습니까?")) {
-                currentQuestionIndex = 0;
-                userAnswers = [];
                 showSection('intro-section');
             }
         }
-
-        // --- 온보딩 및 기타 ---
-        function addAnxietyTag() {
-            const input = document.getElementById('anxietyInput');
-            if (input.value.trim() && !anxietyList.includes(input.value)) {
-                anxietyList.push(input.value.trim());
-                renderTags();
-                input.value = "";
-            }
-        }
-
-        function renderTags() {
-            document.getElementById('anxietyTagsContainer').innerHTML = anxietyList.map((t, i) => `
-                <div class="tag">${t} <b onclick="anxietyList.splice(${i},1);renderTags();" style="cursor:pointer">×</b></div>
-            `).join('');
-        }
-
-        document.getElementById('initialAnxiety').oninput = (e) => document.getElementById('levelDisplay').innerText = e.target.value;
 
         async function submitOnboarding() {
         
@@ -279,66 +285,6 @@
             }
         }
         
-        async function loginUser() {
-            const pId = document.getElementById('loginId').value.trim();
-            if (!pId) { 
-                alert("ID를 입력해주세요!"); 
-                return; 
-            }
-        
-            try {
-                const response = await fetch(`/api/user/${pId}`);
-                
-                if (response.ok) {
-                    // [성공] 기록이 있는 경우
-                    const userData = await response.json();
-                    anxietyList = userData.anxietyFactors || [];
-                    const initialLevel = userData.initialAnxiety || "5";
-        
-                    document.getElementById('welcomeMsg').innerText = `안녕하세요, ${userData.participantId}님!`;
-                    document.getElementById('avgAnxiety').innerText = initialLevel;
-                    document.getElementById('topKeyword').innerText = anxietyList.map(tag => `#${tag}`).join(' ');
-        
-                    showSection('dashboard-section');
-                } else {
-                    // [실패] 서버는 응답했으나 해당 ID가 없는 경우 (404 등)
-                    if (confirm("등록되지 않은 ID입니다.\n이 ID로 새로 만드시겠어요?")) {
-                        goToOnboardingWithId(pId);
-                    }
-                }
-            } catch (err) {
-                // [에러] 서버 자체가 꺼져있거나 연결할 수 없는 경우
-                console.error("Connection Error:", err);
-                if (confirm("현재 서버에 연결할 수 없거나 기록을 찾을 수 없습니다.\n새로운 아이디로 시작하시겠어요?")) {
-                    goToOnboardingWithId(pId);
-                }
-            }
-        }
-        
-        // 아이디를 들고 온보딩 페이지로 바로 이동시켜주는 보조 함수
-        function goToOnboardingWithId(pId) {
-            showSection('onboarding-section');
-            document.getElementById('participantId').value = pId; // 로그인하려던 ID를 자동으로 채워줌
-        }
-        
-        function toggleTracking() {
-            const el = document.getElementById('tracking-section');
-            el.classList.toggle('hidden');
-            if (!el.classList.contains('hidden')) renderChart();
-        }
-
-        function renderChart() {
-            const ctx = document.getElementById('anxietyChart').getContext('2d');
-            if (myChart) myChart.destroy();
-            myChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['1월', '2월', '3월', '현재'],
-                    datasets: [{ label: '불안 지수', data: [7, 5, 8, document.getElementById('initialAnxiety').value], borderColor: '#007bff' }]
-                }
-            });
-        }
-
         // 1. 대화 시작 함수
         function startConversation() {
             console.log("대화 시작!"); // 디버깅용
