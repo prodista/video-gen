@@ -86,16 +86,10 @@ def read_root():
 
 # 채팅 메시지 보내기
 @app.post("/api/chat/send")
-async def send_chat(data: ChatMessage):
-    new_chat = {
-        "roomId": data.roomId,
-        "senderId": data.senderId,
-        "text": data.text,
-        "timestamp": datetime.now()
-    }
-    
-    # MongoDB에 저장
-    await db.chats.insert_one(new_chat)
+async def send_message(request: Request):
+    data = await request.json()
+    # 여기서 전해받은 데이터를 MongoDB에 넣음
+    db['messages'].insert_one(data)
     return {"status": "success"}
 
 # 채팅 메시지 리스트 가져오기 (폴링용)
