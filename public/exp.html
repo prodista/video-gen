@@ -269,6 +269,8 @@
         }
 
         // 메시지 수신 로직 (방 번호 동적 반영)
+        let lastLoadedMessageIds = new Set(); // 이미 화면에 그려진 메시지 ID 저장
+        
         async function fetchMessages() {
             if (!window.currentRoomId) return;
         
@@ -277,19 +279,27 @@
                 if (response.ok) {
                     const messages = await response.json();
                     const chatWindow = document.getElementById('chat-window');
-                    
-                    // 💡 팁: 새 메시지가 있을 때만 화면을 갱신하거나 스크롤을 내리도록 최적화 가능
-                    // 현재는 단순하게 전체 리스트를 다시 그립니다.
-                    chatWindow.innerHTML = ""; 
+                    let hasNewMessage = false;
+        
                     messages.forEach(msg => {
-                        renderMessageToContainer(msg);
+                        // 이미 그려진 메시지가 아니라면 추가
+                        if (!lastLoadedMessageIds.has(msg._id)) {
+                            renderMessageToContainer(msg);
+                            lastLoadedMessageIds.add(msg._id);
+                            hasNewMessage = true;
+                        }
                     });
         
-                    // 가장 최근 대화(맨 아래)로 스크롤 이동
-                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                    // 새 메시지가 추가되었을 때만 스크롤을 아래로 내림
+                    if (hasNewMessage) {
+                        chatWindow.scrollTo({
+                            top: chatWindow.scrollHeight,
+                            behavior: 'smooth'
+                        });
+                    }
                 }
             } catch (err) {
-                console.error("데이터 동기화 중 오류:", err);
+                console.error(err);
             }
         }
         
