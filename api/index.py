@@ -46,7 +46,7 @@ async def check_room(request: Request):
         else:
             return JSONResponse(status_code=401, content={"status": "fail", "message": "비밀번호가 틀립니다."})
 
-# 1. 로그인/조회 (HTML의 fetch('/api/user/${pId}')와 매칭)
+# 로그인/조회 (HTML의 fetch('/api/user/${pId}')와 매칭)
 @app.get("/api/user/{participant_id}")
 async def get_user(participant_id: str):
     user = collection.find_one({"participantId": participant_id}, {"_id": 0})
@@ -55,26 +55,7 @@ async def get_user(participant_id: str):
     else:
         return JSONResponse(status_code=404, content={"message": "User not found"})
 
-# 2. 온보딩 저장 (HTML의 fetch('/api/user/onboarding')와 매칭)
-@app.post("/api/user/onboarding")
-async def save_user(request: Request):
-    try:
-        data = await request.json()
-        user_doc = {
-            "participantId": data.get("participantId"),
-            "purpose": data.get("purpose"),
-            "createdAt": data.get("createdAt")
-        }
-        collection.update_one(
-            {"participantId": user_doc["participantId"]},
-            {"$set": user_doc},
-            upsert=True
-        )
-        return {"status": "success"}
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
-
-# 3. 영상 URL 업데이트 (HTML의 fetch('/api/user/update-video')와 매칭)
+# 영상 URL 업데이트 (HTML의 fetch('/api/user/update-video')와 매칭)
 @app.post("/api/user/update-video")
 async def update_video(request: Request):
     try:
@@ -105,10 +86,16 @@ def read_root():
 
 # 채팅 메시지 보내기
 @app.post("/api/chat/send")
-async def send_message(request: Request):
-    data = await request.json()
-    # 여기서 전해받은 데이터를 몽고디비에 넣음
-    db['messages'].insert_one(data) 
+async def send_chat(data: ChatMessage):
+    new_chat = {
+        "roomId": data.roomId,
+        "senderId": data.senderId,
+        "text": data.text,
+        "timestamp": datetime.now()
+    }
+    
+    # MongoDB에 저장
+    await db.chats.insert_one(new_chat)
     return {"status": "success"}
 
 # 채팅 메시지 리스트 가져오기 (폴링용)
