@@ -240,7 +240,7 @@
             // 기존에 돌고 있던 인터벌이 있다면 중지 (중복 실행 방지)
             if (window.chatInterval) clearInterval(window.chatInterval);
             
-            // [중요] 입장하자마자 과거 대화 내용을 먼저 불러옴
+            // 입장하자마자 과거 대화 내용을 먼저 불러옴
             fetchMessages().then(() => {
                 const chatWindow = document.getElementById('chat-window');
                 chatWindow.scrollTop = chatWindow.scrollHeight;
@@ -310,7 +310,9 @@
                     const alertBtn = document.getElementById('new-msg-alert');
                     
                     let hasNewMessage = false;
-                    let isAtBottom = chatWindow.scrollHeight - chatWindow.scrollTop <= chatWindow.clientHeight + 100;
+                    
+                    // 현재 스크롤이 바닥 근처인지 확인 (오차범위 50px)
+                    const isAtBottom = (chatWindow.scrollHeight - chatWindow.scrollTop) <= (chatWindow.clientHeight + 50);
         
                     messages.forEach(msg => {
                         if (!lastLoadedMessageIds.has(msg._id)) {
@@ -321,21 +323,42 @@
                     });
         
                     if (hasNewMessage) {
-                        // 사용자가 맨 아래 근처에 있다면 자동으로 내려줌
                         if (isAtBottom) {
+                            // 바닥에 있으면 자동으로 스크롤 (알림 불필요)
                             scrollToBottom();
                         } else {
-                            // 사용자가 위를 보고 있다면 알림 버튼 표시
+                            // 위를 보고 있으면 알림 버튼 노출
                             alertBtn.style.display = 'block';
                         }
                     }
                 }
             } catch (err) {
-                console.error(err);
+                console.error("데이터 동기화 실패:", err);
             }
         }
         
-        // 맨 아래로 스크롤하고 알림 버튼 숨기기
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text) return;
+        
+            const response = await fetch('/api/chat/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    roomId: window.currentRoomId,
+                    senderId: window.currentParticipantId,
+                    text: text
+                })
+            });
+        
+            if (response.ok) {
+                input.value = "";
+                await fetchMessages(); // 즉시 업데이트
+                scrollToBottom();
+            }
+        }
+ 
         function scrollToBottom() {
             const chatWindow = document.getElementById('chat-window');
             const alertBtn = document.getElementById('new-msg-alert');
@@ -347,40 +370,6 @@
             
             // 버튼 숨김
             alertBtn.style.display = 'none';
-        }
-        
-        // 메시지 전송 (전역 변수의 roomId와 senderId 사용)
-        async function sendMessage() {
-            const input = document.getElementById('chatInput');
-            const text = input.value.trim();
-            
-            // 전역 변수에서 가져옴 (input 필드 의존성 제거)
-            const myId = window.currentParticipantId;
-            const roomId = window.currentRoomId;
-        
-            if (!text) return;
-        
-            try {
-                const response = await fetch('/api/chat/send', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        roomId: roomId,   // 사용자가 입력했던 방 번호
-                        senderId: myId,   // 사용자가 입력했던 ID
-                        text: text
-                                })
-                });
-        
-                if (response.ok) {
-                    input.value = "";
-                    // 전송 후 즉시 업데이트해서 본인 글 확인
-                    fetchMessages(); 
-                } else {
-                    alert("메시지 전송에 실패했습니다.");
-                }
-            } catch (err) {
-                alert("네트워크 오류가 발생했습니다.");
-            }
         }
         
         function appendMessage(sender, text) {
