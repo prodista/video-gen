@@ -438,8 +438,9 @@
             const chatWindow = document.getElementById('chat-window');
             const isMyMsg = (msg.senderId === window.currentParticipantId);
         
+            // 전체 메시지 줄(Row) 생성
             const messageRow = document.createElement('div');
-            messageRow.style = `display: flex; flex-direction: column; width: 100%; margin-bottom: 12px; align-items: ${isMyMsg ? 'flex-end' : 'flex-start'};`;
+            messageRow.style = `display: flex; flex-direction: column; width: 100%; margin-bottom: 15px; align-items: ${isMyMsg ? 'flex-end' : 'flex-start'};`;
         
             // 발신자 이름
             const nameLabel = document.createElement('div');
@@ -447,13 +448,15 @@
             nameLabel.style = "font-size: 11px; color: #888; margin: 0 5px 4px 5px;";
             messageRow.appendChild(nameLabel);
         
-            // 말풍선
+            // 말풍선 + 타임스탬프 컨테이너 (가로 배치)
+            const contentBox = document.createElement('div');
+            contentBox.style = `display: flex; align-items: flex-end; gap: 5px; flex-direction: ${isMyMsg ? 'row-reverse' : 'row'}; max-width: 90%;`;
+        
+            // 실제 말풍선
             const bubble = document.createElement('div');
             bubble.className = isMyMsg ? "user-msg" : "bot-msg";
-            bubble.style.maxWidth = "80%";
-            bubble.style.position = "relative";
+            bubble.style.margin = "0"; // 기존 마진 제거 (컨테이너에서 조절)
             
-            // 내용 + 영상 생성 버튼
             bubble.innerHTML = `
                 <div style="word-break: break-all;">${msg.text}</div>
                 <div style="margin-top: 8px; padding-top: 5px; border-top: 1px solid ${isMyMsg ? 'rgba(255,255,255,0.2)' : '#eee'};">
@@ -464,7 +467,20 @@
                 </div>
             `;
         
-            messageRow.appendChild(bubble);
+            // 타임스탬프 생성
+            const timeLabel = document.createElement('span');
+            const msgTime = new Date(msg.timestamp || Date.now()); // 서버 데이터가 없으면 현재시간
+            const timeString = msgTime.toLocaleTimeString('ko-KR', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+            timeLabel.innerText = timeString;
+            timeLabel.style = "font-size: 10px; color: #aaa; margin-bottom: 2px; white-space: nowrap;";
+
+            contentBox.appendChild(bubble);
+            contentBox.appendChild(timeLabel);
+            messageRow.appendChild(contentBox);
             chatWindow.appendChild(messageRow);
         }
 
