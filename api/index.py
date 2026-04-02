@@ -22,6 +22,13 @@ client = MongoClient(MONGO_URI)
 db = client['video_gen']
 collection = db['users']
 
+# Cloudinary 연결
+cloudinary.config( 
+  cloud_name = os.getenv("CLOUDINARY_CLOUD_NAME"),
+  api_key = os.getenv("CLOUDINARY_API_KEY"),
+  api_secret = os.getenv("CLOUDINARY_API_SECRET")
+)
+
 @app.get("/api/health")
 def health_check():
     return {"status": "ok", "message": "FastAPI is running"}
