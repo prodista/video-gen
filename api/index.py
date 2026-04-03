@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pymongo import MongoClient
@@ -110,3 +110,29 @@ async def get_messages(room_id: str):
         return messages
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
+
+@app.post("/api/user/profile-image")
+async def upload_profile_image(participantId: str, file: UploadFile = File(...)):
+    try:
+        # Cloudinary에 이미지 업로드 (프로필용으로 크기 조절/최적화)
+        upload_result = cloudinary.uploader.upload(
+            file.file,
+            folder = "profiles",
+            transformation = [
+                {"width": 200, "height": 200, "crop": "thumb", "gravity": "face"}, # 얼굴 중심으로 자르기
+                {"quality": "auto", "fetch_format": "auto"}
+            ]
+        )
+        
+        img_url = upload_result['secure_url']
+
+        # MongoDB에서 해당 사용자의 프로필 URL 업데이트
+        await db.users.update_one(
+            {"participantId": participantId},
+            {"$set": {"profileImg": img_url}},
+            upsert=True
+        )
+        
+        return {"status": "success", "profileImg": img_url}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
