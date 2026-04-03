@@ -125,6 +125,14 @@
                     <label style="display: block; font-size: 11px; color: #888; margin-bottom: 5px;">방 비밀번호</label>
                     <input type="password" id="roomPassword" placeholder="사용하실 비밀번호">
                 </div>
+
+                <div id="profile-setup" style="text-align: center; margin-bottom: 20px;">
+                    <div id="profile-preview" style="width: 80px; height: 80px; border-radius: 50%; background: #eee; margin: 0 auto 10px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                        <span style="color: #aaa; font-size: 12px;">사진 없음</span>
+                    </div>
+                    <input type="file" id="profileInput" accept="image/*" style="display: none;" onchange="uploadProfile()">
+                    <button onclick="document.getElementById('profileInput').click()" style="font-size: 12px; padding: 5px 10px;">사진 선택</button>
+                </div>
         
                 <button onclick="handleLogin()">실험 입장하기</button>
             </div>
@@ -187,6 +195,33 @@
                 startChatSession(); 
             }
         };
+
+        async function uploadProfile() {
+            const fileInput = document.getElementById('profileInput');
+            const pId = window.currentParticipantId || document.getElementById('participantId').value;
+            
+            if (!fileInput.files[0] || !pId) {
+                alert("아이디를 먼저 입력하고 파일을 선택해주세요.");
+                return;
+            }
+        
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('participantId', pId);
+        
+            const response = await fetch('/api/user/profile-image', {
+                method: 'POST',
+                body: formData
+            });
+        
+            if (response.ok) {
+                const result = await response.json();
+                // 미리보기 업데이트
+                document.getElementById('profile-preview').innerHTML = `<img src="${result.profileImg}" style="width:100%; height:100%; object-fit:cover;">`;
+                localStorage.setItem('userProfileImg', result.profileImg);
+                alert("프로필 사진이 적용되었습니다!");
+            }
+        }
         
         // 로그인 처리 (방 번호 + 비밀번호 검증)
         async function handleLogin() {
@@ -437,10 +472,20 @@
         function renderMessageToContainer(msg) {
             const chatWindow = document.getElementById('chat-window');
             const isMyMsg = (msg.senderId === window.currentParticipantId);
-        
+
+            // 유저의 프로필 사진 적용
+            const profileSrc = msg.senderProfileImg || 'https://via.placeholder.com/40';
+            
             // 전체 메시지 줄(Row) 생성
             const messageRow = document.createElement('div');
-            messageRow.style = `display: flex; flex-direction: column; width: 100%; margin-bottom: 15px; align-items: ${isMyMsg ? 'flex-end' : 'flex-start'};`;
+            messageRow.style = `display: flex; flex-direction: row; margin-bottom: 15px; align-items: flex-start; ${isMyMsg ? 'flex-direction: row-reverse' : ''};`;
+
+            // 프로필 이미지 추가
+            const imgHtml = `<img src="${profileSrc}" style="width: 35px; height: 35px; border-radius: 50%; margin: 0 8px; border: 1px solid #ddd;">`;
+            messageRow.innerHTML = imgHtml;
+        
+            const contentCol = document.createElement('div');
+            contentCol.style = `display: flex; flex-direction: column; align-items: ${isMyMsg ? 'flex-end' : 'flex-start'};`;
         
             // 발신자 이름
             const nameLabel = document.createElement('div');
