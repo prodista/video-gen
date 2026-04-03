@@ -5,6 +5,9 @@ from pymongo import MongoClient
 from datetime import datetime
 from bson import ObjectId
 import os
+import cloudinary
+import cloudinary.uploader
+from cloudinary.utils import cloudinary_url
 
 app = FastAPI()
 
