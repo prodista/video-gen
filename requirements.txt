@@ -1,6 +1,6 @@
 fastapi
 uvicorn
 pymongo
-cloudinary
+google-cloud-storage
 dnspython
 python-multipart
