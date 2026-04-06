@@ -109,20 +109,20 @@ async def get_messages(room_id: str):
 @app.post("/api/user/profile-image")
 async def upload_profile_image(participantId: str, file: UploadFile = File(...)):
     try:
-        # 파일명 생성 (중복 방지를 위해 ID와 타임스탬프 조합)
-        filename = f"profile_{participantId}.jpg"
+        # 고정 파일명 설정 (타임스탬프 제외)
+        ext = file.filename.split(".")[-1]
+        filename = f"profile_{participantId}.{ext}"
         
-        # GCS 경로 설정 (profiles 폴더 안에 저장)
+        # GCS 경로 설정 (항상 같은 경로에 저장되어 덮어쓰기 발생)
         blob = bucket.blob(f"profiles/{filename}")
         
-        # GCS에 업로드 (메모리상의 파일을 바로 스트림으로 전달)
+        # 업로드 및 공개 설정
         blob.upload_from_file(file.file, content_type=file.content_type)
-        
-        # 피실험자들이 채팅창에서 볼 수 있게 공개 권한 부여
         blob.make_public()
+        
         img_url = blob.public_url
 
-        # MongoDB에 해당 사용자의 프로필 URL 업데이트
+        # DB 업데이트 (파일 이름이 같더라도 혹시 모를 확장자 변경 대비)
         await db.users.update_one(
             {"participantId": participantId},
             {"$set": {"profileImg": img_url}},
@@ -132,7 +132,6 @@ async def upload_profile_image(participantId: str, file: UploadFile = File(...))
         return {"status": "success", "profileImg": img_url}
         
     except Exception as e:
-        print(f"프로필 업로드 에러: {e}")
         return {"status": "error", "message": str(e)}
         
 # Vercel에 등록한 환경변수 문자열을 가져옴
