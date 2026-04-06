@@ -469,7 +469,7 @@
         }
 
         // 메시지 렌더링 함수
-        function renderMessageToContainer(msg) {
+        function renderMessageToContainer(messageData) {
             const chatWindow = document.getElementById('chat-window');
             const isMyMsg = (msg.senderId === window.currentParticipantId);
 
