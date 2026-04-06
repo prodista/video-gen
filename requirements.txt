@@ -4,3 +4,4 @@ pymongo
 google-cloud-storage
 dnspython
 python-multipart
+motor
