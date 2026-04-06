@@ -520,6 +520,7 @@
                 minute: '2-digit',
                 hour12: true
             });
+            
             timeLabel.innerText = timeString;
             timeLabel.style = "font-size: 10px; color: #aaa; margin-bottom: 2px; white-space: nowrap;";
 
@@ -527,6 +528,28 @@
             contentBox.appendChild(timeLabel);
             messageRow.appendChild(contentBox);
             chatWindow.appendChild(messageRow);
+
+            const container = document.getElementById('chat-messages-container');
+
+            // GCS에서 가져온 프로필 URL (없으면 기본 이미지)
+            const baseImg = messageData.profileImg || '/static/images/default-avatar.png';
+        
+            // 캐시 방지를 위해 타임스탬프를 붙인 userImg 상수 생성
+            const userImg = `${baseImg}?t=${new Date().getTime()}`;
+        
+            // HTML 생성 시 src에 userImg 삽입
+            const messageHtml = `
+                <div class="message-wrapper ${messageData.senderId === window.myId ? 'my-msg' : 'other-msg'}">
+                    <img src="${userImg}" class="profile-icon">
+                    <div class="text-bubble">
+                        <span class="sender-name">${messageData.senderId}</span>
+                        <p class="message-text">${messageData.text}</p>
+                        <span class="timestamp">${messageData.time}</span>
+                    </div>
+                </div>
+            `;
+
+            container.insertAdjacentHTML('beforeend', messageHtml);
         }
 
         // 영상 생성 요청 (실험 데이터 기록용)
