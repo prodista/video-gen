@@ -500,61 +500,55 @@
         // 메시지 렌더링 함수
         function renderMessageToContainer(msg) {
             const chatWindow = document.getElementById('chat-window');
-            if (!chatWindow) return;
-        
             const isMyMsg = (msg.senderId === window.currentParticipantId);
+           
+            // 고유 ID 생성 (메시지의 _id가 객체일 경우를 대비해 문자열 처리)
+            const rawId = msg._id?.$oid || msg._id;
+            const videoBtnId = `btn-video-${rawId}`; 
         
-            // 프로필 이미지 경로 설정 (캐시 방지 포함)
             const baseImg = msg.profileImg || '/static/images/default-avatar.png';
             const userImg = `${baseImg}?t=${new Date().getTime()}`;
         
-            // 타임스탬프 처리
-            const msgTime = new Date(msg.timestamp || Date.now());
-            const timeString = msgTime.toLocaleTimeString('ko-KR', {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true
-            });
-        
-            // HTML 구조 생성
+            // HTML 생성 (버튼 부분에 id와 videoBtnId 인자 추가)
             const messageHtml = `
                 <div class="message-wrapper ${isMyMsg ? 'my-msg' : 'other-msg'}" style="display: flex; margin-bottom: 15px; gap: 10px; ${isMyMsg ? 'flex-direction: row-reverse;' : ''}">
                     <img src="${userImg}" class="profile-icon" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid #ddd;">
-                    
-                    <div style="display: flex; flex-direction: column; align-items: ${isMyMsg ? 'flex-end' : 'flex-start'}; max-width: 80%;">
-                        <span style="font-size: 11px; color: #888; margin-bottom: 4px; padding: 0 5px;">${msg.senderId}</span>
-                        
-                        <div style="display: flex; align-items: flex-end; gap: 5px; flex-direction: ${isMyMsg ? 'row-reverse' : 'row'};">
-                            <div class="${isMyMsg ? 'user-msg' : 'bot-msg'}" style="margin: 0; position: relative;">
-                                <div style="word-break: break-all;">${msg.text}</div>
-                                <div style="margin-top: 8px; padding-top: 5px; border-top: 1px solid ${isMyMsg ? 'rgba(255,255,255,0.2)' : '#eee'};">
-                                    <button onclick="requestVideoGen('${msg._id}', '${msg.text.replace(/'/g, "\\'")}')" 
-                                            style="width:auto; padding:2px 6px; font-size:10px; background:#ff7b00; color:white; border:none; border-radius:4px; cursor:pointer;">
-                                        🎬 영상 지시
-                                    </button>
-                                </div>
+                    <div style="display: flex; flex-direction: column; align-items: ${isMyMsg ? 'flex-end' : 'flex-start'};">
+                        <span style="font-size: 11px; color: #888; margin-bottom: 4px;">${msg.senderId}</span>
+                        <div class="${isMyMsg ? 'user-msg' : 'bot-msg'}">
+                            <div>${msg.text}</div>
+                            <div style="margin-top: 8px; padding-top: 5px; border-top: 1px solid ${isMyMsg ? 'rgba(255,255,255,0.2)' : '#eee'};">
+                                <button id="${videoBtnId}" 
+                                        onclick="requestVideoGen('${rawId}', '${msg.text.replace(/'/g, "\\'")}', '${videoBtnId}')" 
+                                        style="width:auto; padding:2px 6px; font-size:10px; background:#ff7b00; color:white; border:none; border-radius:4px; cursor:pointer;">
+                                    🎬 영상 지시
+                                </button>
                             </div>
-                            <span style="font-size: 10px; color: #aaa; white-space: nowrap; margin-bottom: 2px;">${timeString}</span>
                         </div>
                     </div>
                 </div>
             `;
         
-            // 화면에 삽입
             chatWindow.insertAdjacentHTML('beforeend', messageHtml);
         }
 
         // 영상 생성 요청 (실험 데이터 기록용)
-        async function requestVideoGen(msgId, text) {
-            // 전역 변수에서 ID 가져오기
+        async function requestVideoGen(msgId, text, btnId) {
             const myId = window.currentParticipantId || localStorage.getItem('pId');
-            
+            const targetBtn = document.getElementById(btnId);
+        
             if (!myId) {
-                alert("유저 정보(ID)를 찾을 수 없습니다. 다시 로그인해 주세요.");
+                alert("유저 정보를 찾을 수 없습니다.");
                 return;
             }
         
-            console.log("전송 데이터:", { myId, msgId, text }); // 확인용 콘솔 로그
+            // [추가] 클릭 즉시 버튼 비활성화 (중복 클릭 방지)
+            if (targetBtn) {
+                targetBtn.disabled = true;
+                targetBtn.innerText = "⌛ 요청 중...";
+                targetBtn.style.background = "#ccc"; // 회색으로 변경
+                targetBtn.style.cursor = "not-allowed";
+            }
         
             try {
                 const response = await fetch('/api/user/update-video', {
@@ -569,14 +563,26 @@
                 });
         
                 if (response.ok) {
-                    alert("DB 기록 성공!");
+                    // 요청 성공 시 문구 변경
+                    if (targetBtn) targetBtn.innerText = "✅ 요청 완료";
+                    console.log("DB 기록 성공");
                 } else {
-                    const errorData = await response.json();
-                    alert("서버 오류: " + errorData.message);
+                    // 실패 시 다시 시도할 수 있도록 복구
+                    alert("기록 실패. 다시 시도해주세요.");
+                    if (targetBtn) {
+                        targetBtn.disabled = false;
+                        targetBtn.innerText = "🎬 영상 지시";
+                        targetBtn.style.background = "#ff7b00";
+                    }
                 }
             } catch (err) {
-                console.error("전송 실패:", err);
-                alert("네트워크 연결 실패");
+                console.error("전송 에러:", err);
+                // 네트워크 에러 시 복구
+                if (targetBtn) {
+                    targetBtn.disabled = false;
+                    targetBtn.innerText = "🎬 영상 지시";
+                    targetBtn.style.background = "#ff7b00";
+                }
             }
         }
         
