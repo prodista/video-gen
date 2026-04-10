@@ -500,85 +500,48 @@
         // 메시지 렌더링 함수
         function renderMessageToContainer(msg) {
             const chatWindow = document.getElementById('chat-window');
+            if (!chatWindow) return;
+        
             const isMyMsg = (msg.senderId === window.currentParticipantId);
-
-            // 유저의 프로필 사진 적용
-            const profileSrc = msg.senderProfileImg || 'https://via.placeholder.com/40';
-            
-            // 전체 메시지 줄(Row) 생성
-            const messageRow = document.createElement('div');
-            messageRow.style = `display: flex; flex-direction: row; margin-bottom: 15px; align-items: flex-start; ${isMyMsg ? 'flex-direction: row-reverse' : ''};`;
-
-            // 프로필 이미지 추가
-            const imgHtml = `<img src="${profileSrc}" style="width: 35px; height: 35px; border-radius: 50%; margin: 0 8px; border: 1px solid #ddd;">`;
-            messageRow.innerHTML = imgHtml;
         
-            const contentCol = document.createElement('div');
-            contentCol.style = `display: flex; flex-direction: column; align-items: ${isMyMsg ? 'flex-end' : 'flex-start'};`;
+            // 프로필 이미지 경로 설정 (캐시 방지 포함)
+            const baseImg = msg.profileImg || '/static/images/default-avatar.png';
+            const userImg = `${baseImg}?t=${new Date().getTime()}`;
         
-            // 발신자 이름
-            const nameLabel = document.createElement('div');
-            nameLabel.innerText = msg.senderId;
-            nameLabel.style = "font-size: 11px; color: #888; margin: 0 5px 4px 5px;";
-            messageRow.appendChild(nameLabel);
-        
-            // 말풍선 + 타임스탬프 컨테이너 (가로 배치)
-            const contentBox = document.createElement('div');
-            contentBox.style = `display: flex; align-items: flex-end; gap: 5px; flex-direction: ${isMyMsg ? 'row-reverse' : 'row'}; max-width: 90%;`;
-        
-            // 실제 말풍선
-            const bubble = document.createElement('div');
-            bubble.className = isMyMsg ? "user-msg" : "bot-msg";
-            bubble.style.margin = "0"; // 기존 마진 제거 (컨테이너에서 조절)
-            
-            bubble.innerHTML = `
-                <div style="word-break: break-all;">${msg.text}</div>
-                <div style="margin-top: 8px; padding-top: 5px; border-top: 1px solid ${isMyMsg ? 'rgba(255,255,255,0.2)' : '#eee'};">
-                    <button onclick="requestVideoGen('${msg._id}', '${msg.text.replace(/'/g, "\\'")}')" 
-                            style="width:auto; padding:2px 6px; font-size:10px; background:#ff7b00; color:white; border:none; border-radius:4px; cursor:pointer;">
-                        🎬 영상 지시
-                    </button>
-                </div>
-            `;
-        
-            // 타임스탬프 생성
-            const timeLabel = document.createElement('span');
-            const msgTime = new Date(msg.timestamp || Date.now()); // 서버 데이터가 없으면 현재시간
+            // 타임스탬프 처리
+            const msgTime = new Date(msg.timestamp || Date.now());
             const timeString = msgTime.toLocaleTimeString('ko-KR', {
                 hour: '2-digit',
                 minute: '2-digit',
                 hour12: true
             });
-            
-            timeLabel.innerText = timeString;
-            timeLabel.style = "font-size: 10px; color: #aaa; margin-bottom: 2px; white-space: nowrap;";
-
-            contentBox.appendChild(bubble);
-            contentBox.appendChild(timeLabel);
-            messageRow.appendChild(contentBox);
-            chatWindow.appendChild(messageRow);
-
-            const container = document.getElementById('chat-messages-container');
-
-            // GCS에서 가져온 프로필 URL (없으면 기본 이미지)
-            const baseImg = msg.profileImg || '/static/images/default-avatar.png';
         
-            // 캐시 방지를 위해 타임스탬프를 붙인 userImg 상수 생성
-            const userImg = `${baseImg}?t=${new Date().getTime()}`;
-        
-            // HTML 생성 시 src에 userImg 삽입
+            // HTML 구조 생성
             const messageHtml = `
-                <div class="message-wrapper ${msg.senderId === window.myId ? 'my-msg' : 'other-msg'}">
-                    <img src="${userImg}" class="profile-icon">
-                    <div class="text-bubble">
-                        <span class="sender-name">${msg.senderId}</span>
-                        <p class="message-text">${msg.text}</p>
-                        <span class="timestamp">${msg.time}</span>
+                <div class="message-wrapper ${isMyMsg ? 'my-msg' : 'other-msg'}" style="display: flex; margin-bottom: 15px; gap: 10px; ${isMyMsg ? 'flex-direction: row-reverse;' : ''}">
+                    <img src="${userImg}" class="profile-icon" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid #ddd;">
+                    
+                    <div style="display: flex; flex-direction: column; align-items: ${isMyMsg ? 'flex-end' : 'flex-start'}; max-width: 80%;">
+                        <span style="font-size: 11px; color: #888; margin-bottom: 4px; padding: 0 5px;">${msg.senderId}</span>
+                        
+                        <div style="display: flex; align-items: flex-end; gap: 5px; flex-direction: ${isMyMsg ? 'row-reverse' : 'row'};">
+                            <div class="${isMyMsg ? 'user-msg' : 'bot-msg'}" style="margin: 0; position: relative;">
+                                <div style="word-break: break-all;">${msg.text}</div>
+                                <div style="margin-top: 8px; padding-top: 5px; border-top: 1px solid ${isMyMsg ? 'rgba(255,255,255,0.2)' : '#eee'};">
+                                    <button onclick="requestVideoGen('${msg._id}', '${msg.text.replace(/'/g, "\\'")}')" 
+                                            style="width:auto; padding:2px 6px; font-size:10px; background:#ff7b00; color:white; border:none; border-radius:4px; cursor:pointer;">
+                                        🎬 영상 지시
+                                    </button>
+                                </div>
+                            </div>
+                            <span style="font-size: 10px; color: #aaa; white-space: nowrap; margin-bottom: 2px;">${timeString}</span>
+                        </div>
                     </div>
                 </div>
             `;
-
-            container.insertAdjacentHTML('beforeend', messageHtml);
+        
+            // 화면에 삽입
+            chatWindow.insertAdjacentHTML('beforeend', messageHtml);
         }
 
         // 영상 생성 요청 (실험 데이터 기록용)
