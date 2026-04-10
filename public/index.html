@@ -492,7 +492,7 @@
         }
 
         // 메시지 렌더링 함수
-        function renderMessageToContainer(messageData) {
+        function renderMessageToContainer(msg) {
             const chatWindow = document.getElementById('chat-window');
             const isMyMsg = (msg.senderId === window.currentParticipantId);
 
@@ -555,19 +555,19 @@
             const container = document.getElementById('chat-messages-container');
 
             // GCS에서 가져온 프로필 URL (없으면 기본 이미지)
-            const baseImg = messageData.profileImg || '/static/images/default-avatar.png';
+            const baseImg = msg.profileImg || '/static/images/default-avatar.png';
         
             // 캐시 방지를 위해 타임스탬프를 붙인 userImg 상수 생성
             const userImg = `${baseImg}?t=${new Date().getTime()}`;
         
             // HTML 생성 시 src에 userImg 삽입
             const messageHtml = `
-                <div class="message-wrapper ${messageData.senderId === window.myId ? 'my-msg' : 'other-msg'}">
+                <div class="message-wrapper ${msg.senderId === window.myId ? 'my-msg' : 'other-msg'}">
                     <img src="${userImg}" class="profile-icon">
                     <div class="text-bubble">
-                        <span class="sender-name">${messageData.senderId}</span>
-                        <p class="message-text">${messageData.text}</p>
-                        <span class="timestamp">${messageData.time}</span>
+                        <span class="sender-name">${msg.senderId}</span>
+                        <p class="message-text">${msg.text}</p>
+                        <span class="timestamp">${msg.time}</span>
                     </div>
                 </div>
             `;
