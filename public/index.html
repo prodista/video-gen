@@ -362,32 +362,38 @@
         
             try {
                 const response = await fetch(`/api/chat/receive/${window.currentRoomId}`);
-                if (response.ok) {
-                    const messages = await response.json();
-                    const chatWindow = document.getElementById('chat-window');
-                    const alertBtn = document.getElementById('new-msg-alert');
-                    
-                    let hasNewMessage = false;
-                    
-                    // 현재 스크롤이 바닥 근처인지 확인 (오차범위 50px)
-                    const isAtBottom = (chatWindow.scrollHeight - chatWindow.scrollTop) <= (chatWindow.clientHeight + 50);
+                if (!response.ok) return;
         
-                    messages.forEach(msg => {
-                        if (!lastLoadedMessageIds.has(msg._id)) {
-                            renderMessageToContainer(msg);
-                            lastLoadedMessageIds.add(msg._id);
-                            hasNewMessage = true;
-                        }
-                    });
+                const messages = await response.json();
+                const chatWindow = document.getElementById('chat-window');
+                const alertBtn = document.getElementById('new-msg-alert');
+                
+                let hasNewMessage = false;
         
-                    if (hasNewMessage) {
-                        if (isAtBottom) {
-                            // 바닥에 있으면 자동으로 스크롤 (알림 불필요)
-                            scrollToBottom();
-                        } else {
-                            // 위를 보고 있으면 알림 버튼 노출
-                            alertBtn.style.display = 'block';
-                        }
+                // 현재 스크롤 위치 계산
+                const isAtBottom = (chatWindow.scrollHeight - chatWindow.scrollTop) <= (chatWindow.clientHeight + 100);
+        
+                // 메시지 처리 루프
+                messages.forEach(msg => {
+                    // MongoDB의 _id 또는 별도의 고유 ID가 있는지 확인
+                    const msgId = msg._id || msg.id; 
+        
+                    // 중복 체크: 이미 불러온 ID가 아닌 경우에만 렌더링
+                    if (msgId && !lastLoadedMessageIds.has(msgId)) {
+                        renderMessageToContainer(msg);
+                        lastLoadedMessageIds.add(msgId); // 메모리에 ID 기록
+                        hasNewMessage = true;
+                    }
+                });
+        
+                // 스크롤 및 알림 제어
+                if (hasNewMessage) {
+                    if (isAtBottom) {
+                        setTimeout(scrollToBottom, 50); 
+                        alertBtn.style.display = 'none';
+                    } else {
+                        // 사용자가 위를 보고 있을 때만 알림 노출
+                        alertBtn.style.display = 'block';
                     }
                 }
             } catch (err) {
