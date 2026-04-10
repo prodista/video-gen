@@ -61,12 +61,24 @@ async def get_user(participant_id: str):
 # 영상 URL 업데이트 (HTML의 fetch('/api/user/update-video')와 매칭)
 @app.post("/api/user/update-video")
 async def update_video(data: dict):
-    p_id = data.get("participantId")
-    msg_id = data.get("sourceMsgId")
-    text = data.get("promptText")
-    
-    print(f"데이터 수신 완료: {p_id}, {text}") # 서버 로그 확인용
-    return {"status": "success"}
+    try:
+        # 프론트에서 보낸 데이터 추출
+        p_id = data.get("participantId")
+        msg_id = data.get("sourceMsgId")
+        text = data.get("promptText")
+        
+        # MongoDB에 저장 (이 코드가 반드시 있어야 합니다!)
+        db.video_requests.insert_one({
+            "participantId": p_id,
+            "sourceMsgId": msg_id,
+            "promptText": text,
+            "status": "pending",
+            "createdAt": datetime.now()
+        })
+        
+        return {"status": "success", "message": "기록 완료"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 # 히스토리 불러오기
 @app.get("/api/history")
