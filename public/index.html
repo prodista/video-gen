@@ -355,11 +355,15 @@
         }
 
         // 메시지 수신 로직 (방 번호 동적 반영)
-        let lastLoadedMessageIds = new Set();
+        // 기존 Set 대신 localStorage에서 불러오거나 빈 배열로 시작
+        let loadedIdsArray = JSON.parse(localStorage.getItem('loadedMsgIds')) || [];
+        let lastLoadedMessageIds = new Set(loadedIdsArray);
         
         async function fetchMessages() {
             if (!window.currentRoomId) return;
-        
+
+            let lastTimestamp = localStorage.getItem('lastTimestamp') || "2026-01-01T00:00:00Z";
+            
             try {
                 const response = await fetch(`/api/chat/receive/${window.currentRoomId}`);
                 if (!response.ok) return;
@@ -369,31 +373,47 @@
                 const alertBtn = document.getElementById('new-msg-alert');
                 
                 let hasNewMessage = false;
-        
-                // 현재 스크롤 위치 계산
+                
+                // 현재 스크롤 위치 계산 (바닥에서 100px 이내에 있는지 확인)
                 const isAtBottom = (chatWindow.scrollHeight - chatWindow.scrollTop) <= (chatWindow.clientHeight + 100);
-        
-                // 메시지 처리 루프
-                messages.forEach(msg => {
-                    // MongoDB의 _id 또는 별도의 고유 ID가 있는지 확인
-                    const msgId = msg._id || msg.id; 
-        
-                    // 중복 체크: 이미 불러온 ID가 아닌 경우에만 렌더링
-                    if (msgId && !lastLoadedMessageIds.has(msgId)) {
-                        renderMessageToContainer(msg);
-                        lastLoadedMessageIds.add(msgId); // 메모리에 ID 기록
-                        hasNewMessage = true;
-                    }
-                });
-        
-                // 스크롤 및 알림 제어
-                if (hasNewMessage) {
-                    if (isAtBottom) {
-                        setTimeout(scrollToBottom, 50); 
-                        alertBtn.style.display = 'none';
-                    } else {
-                        // 사용자가 위를 보고 있을 때만 알림 노출
-                        alertBtn.style.display = 'block';
+                
+                if (messages && messages.length > 0) {
+                    messages.forEach(msg => {
+                        // ID 추출 (MongoDB 객체 대응)
+                        const rawId = msg._id?.$oid || msg._id || msg.id;
+                        const msgId = String(rawId);
+                
+                        // [중복 체크] 이미 불러온 ID가 아닌 경우에만 실행
+                        if (msgId && !lastLoadedMessageIds.has(msgId)) {
+                            // 화면에 메시지 추가
+                            renderMessageToContainer(msg);
+                            
+                            // 메모리(Set)와 로컬스토리지에 저장
+                            lastLoadedMessageIds.add(msgId);
+                            hasNewMessage = true;
+                        }
+                    });
+                
+                    // 루프가 끝난 후, 새로운 메시지가 하나라도 있었다면 저장소 업데이트
+                    if (hasNewMessage) {
+                        // 중복 방지 ID 리스트 영구 저장
+                        localStorage.setItem('loadedMsgIds', JSON.stringify(Array.from(lastLoadedMessageIds)));
+                        
+                        // 마지막 타임스탬프 업데이트 (가장 최신 메시지의 시간 저장)
+                        const latestTime = messages[messages.length - 1].createdAt;
+                        if (latestTime) {
+                            localStorage.setItem('lastTimestamp', latestTime);
+                        }
+                
+                        // 스크롤 및 알림 제어
+                        if (isAtBottom) {
+                            // 바닥 근처라면 자동으로 스크롤 내려주기
+                            setTimeout(scrollToBottom, 50); 
+                            alertBtn.style.display = 'none';
+                        } else {
+                            // 사용자가 이전 대화 읽는 중(위쪽)이라면 "새 메시지 알림" 표시
+                            alertBtn.style.display = 'block';
+                        }
                     }
                 }
             } catch (err) {
