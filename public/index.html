@@ -248,6 +248,7 @@
         
         // 로그인 처리 (방 번호 + 비밀번호 검증)
         async function handleLogin() {
+            localStorage.clear();
             const pId = document.getElementById('participantId').value.trim();
             const rNum = document.getElementById('roomNumber').value.trim();
             const rPw = document.getElementById('roomPassword').value.trim();
