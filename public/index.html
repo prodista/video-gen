@@ -522,29 +522,41 @@
         function renderMessageToContainer(msg) {
             const chatWindow = document.getElementById('chat-window');
             const isMyMsg = (msg.senderId === window.currentParticipantId);
-           
-            // 고유 ID 생성 (메시지의 _id가 객체일 경우를 대비해 문자열 처리)
+        
+            // 고유 ID 및 시간 처리
             const rawId = msg._id?.$oid || msg._id;
-            const videoBtnId = `btn-video-${rawId}`; 
+            const videoBtnId = `btn-video-${rawId}`;
+            
+            // ISO 시간을 읽기 좋은 형식으로 변환
+            // msg.createdAt이 없을 경우 현재 시간을 기본값으로 사용
+            const date = msg.createdAt ? new Date(msg.createdAt) : new Date();
+            const displayTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         
             const baseImg = msg.profileImg || '/static/images/default-avatar.png';
             const userImg = `${baseImg}?t=${new Date().getTime()}`;
         
-            // HTML 생성 (버튼 부분에 id와 videoBtnId 인자 추가)
             const messageHtml = `
                 <div class="message-wrapper ${isMyMsg ? 'my-msg' : 'other-msg'}" style="display: flex; margin-bottom: 15px; gap: 10px; ${isMyMsg ? 'flex-direction: row-reverse;' : ''}">
                     <img src="${userImg}" class="profile-icon" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid #ddd;">
-                    <div style="display: flex; flex-direction: column; align-items: ${isMyMsg ? 'flex-end' : 'flex-start'};">
+                    
+                    <div style="display: flex; flex-direction: column; align-items: ${isMyMsg ? 'flex-end' : 'flex-start'}; max-width: 70%;">
                         <span style="font-size: 11px; color: #888; margin-bottom: 4px;">${msg.senderId}</span>
-                        <div class="${isMyMsg ? 'user-msg' : 'bot-msg'}">
-                            <div>${msg.text}</div>
-                            <div style="margin-top: 8px; padding-top: 5px; border-top: 1px solid ${isMyMsg ? 'rgba(255,255,255,0.2)' : '#eee'};">
-                                <button id="${videoBtnId}" 
-                                        onclick="requestVideoGen('${rawId}', '${msg.text.replace(/'/g, "\\'")}', '${videoBtnId}')" 
-                                        style="width:auto; padding:2px 6px; font-size:10px; background:#ff7b00; color:white; border:none; border-radius:4px; cursor:pointer;">
-                                    🎬 영상 지시
-                                </button>
+                        
+                        <div style="display: flex; align-items: flex-end; gap: 5px; ${isMyMsg ? 'flex-direction: row-reverse;' : ''}">
+                            <div class="${isMyMsg ? 'user-msg' : 'bot-msg'}" style="margin: 0;">
+                                <div>${msg.text}</div>
+                                <div style="margin-top: 8px; padding-top: 5px; border-top: 1px solid ${isMyMsg ? 'rgba(255,255,255,0.2)' : '#eee'};">
+                                    <button id="${videoBtnId}" 
+                                            onclick="requestVideoGen('${rawId}', '${msg.text.replace(/'/g, "\\'")}', '${videoBtnId}')" 
+                                            style="width:auto; padding:2px 6px; font-size:10px; background:#ff7b00; color:white; border:none; border-radius:4px; cursor:pointer;">
+                                        🎬 영상 지시
+                                    </button>
+                                </div>
                             </div>
+                            
+                            <span style="font-size: 9px; color: #aaa; min-width: 45px; margin-bottom: 2px;">
+                                ${displayTime}
+                            </span>
                         </div>
                     </div>
                 </div>
