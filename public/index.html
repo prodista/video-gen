@@ -362,9 +362,7 @@
         
         async function fetchMessages() {
             if (!window.currentRoomId) return;
-
-            let lastTimestamp = localStorage.getItem('lastTimestamp') || "2026-01-01T00:00:00Z";
-            
+        
             try {
                 const response = await fetch(`/api/chat/receive/${window.currentRoomId}`);
                 if (!response.ok) return;
@@ -374,45 +372,38 @@
                 const alertBtn = document.getElementById('new-msg-alert');
                 
                 let hasNewMessage = false;
-                
-                // 현재 스크롤 위치 계산 (바닥에서 100px 이내에 있는지 확인)
                 const isAtBottom = (chatWindow.scrollHeight - chatWindow.scrollTop) <= (chatWindow.clientHeight + 100);
-                
+        
                 if (messages && messages.length > 0) {
                     messages.forEach(msg => {
-                        // ID 추출 (MongoDB 객체 대응)
+                        // [중요] ID 추출 (문자열로 통일)
                         const rawId = msg._id?.$oid || msg._id || msg.id;
                         const msgId = String(rawId);
-                
-                        // [중복 체크] 이미 불러온 ID가 아닌 경우에만 실행
+        
+                        // [중복 체크] 이미 화면에 그린 ID가 아닐 때만 렌더링
                         if (msgId && !lastLoadedMessageIds.has(msgId)) {
-                            // 화면에 메시지 추가
                             renderMessageToContainer(msg);
-                            
-                            // 메모리(Set)와 로컬스토리지에 저장
                             lastLoadedMessageIds.add(msgId);
                             hasNewMessage = true;
                         }
                     });
-                
-                    // 루프가 끝난 후, 새로운 메시지가 하나라도 있었다면 저장소 업데이트
+        
                     if (hasNewMessage) {
-                        // 중복 방지 ID 리스트 영구 저장
+                        // 1. 중복 방지 리스트 저장
                         localStorage.setItem('loadedMsgIds', JSON.stringify(Array.from(lastLoadedMessageIds)));
                         
-                        // 마지막 타임스탬프 업데이트 (가장 최신 메시지의 시간 저장)
-                        const latestTime = messages[messages.length - 1].createdAt;
+                        // 2. 마지막 타임스탬프 업데이트 (가장 최신 메시지의 timestamp 기준)
+                        const latestMsg = messages[messages.length - 1];
+                        const latestTime = latestMsg.timestamp || latestMsg.createdAt;
                         if (latestTime) {
                             localStorage.setItem('lastTimestamp', latestTime);
                         }
-                
-                        // 스크롤 및 알림 제어
+        
+                        // 3. 스크롤 처리
                         if (isAtBottom) {
-                            // 바닥 근처라면 자동으로 스크롤 내려주기
-                            setTimeout(scrollToBottom, 50); 
+                            setTimeout(scrollToBottom, 50);
                             alertBtn.style.display = 'none';
                         } else {
-                            // 사용자가 이전 대화 읽는 중(위쪽)이라면 "새 메시지 알림" 표시
                             alertBtn.style.display = 'block';
                         }
                     }
@@ -523,27 +514,30 @@
             const chatWindow = document.getElementById('chat-window');
             const isMyMsg = (msg.senderId === window.currentParticipantId);
         
-            // 고유 ID 및 시간 처리
             const rawId = msg._id?.$oid || msg._id;
             const videoBtnId = `btn-video-${rawId}`;
             
-            // ISO 시간을 읽기 좋은 형식으로 변환
-            // msg.createdAt이 없을 경우 현재 시간을 기본값으로 사용
-            const date = msg.createdAt ? new Date(msg.createdAt) : new Date();
-            const displayTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            // timestamp 필드를 우선적으로 읽음
+            const rawDate = msg.timestamp || msg.createdAt || new Date();
+            const date = new Date(rawDate);
+            
+            // 시간 형식 설정 (24시간제 HH:mm)
+            const displayTime = isNaN(date.getTime()) 
+                ? "--:--" 
+                : date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
         
             const baseImg = msg.profileImg || '/static/images/default-avatar.png';
             const userImg = `${baseImg}?t=${new Date().getTime()}`;
         
             const messageHtml = `
                 <div class="message-wrapper ${isMyMsg ? 'my-msg' : 'other-msg'}" style="display: flex; margin-bottom: 15px; gap: 10px; ${isMyMsg ? 'flex-direction: row-reverse;' : ''}">
-                    <img src="${userImg}" class="profile-icon" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid #ddd;">
+                    <img src="${userImg}" class="profile-icon">
                     
-                    <div style="display: flex; flex-direction: column; align-items: ${isMyMsg ? 'flex-end' : 'flex-start'}; max-width: 70%;">
+                    <div style="display: flex; flex-direction: column; align-items: ${isMyMsg ? 'flex-end' : 'flex-start'}; max-width: 75%;">
                         <span style="font-size: 11px; color: #888; margin-bottom: 4px;">${msg.senderId}</span>
                         
                         <div style="display: flex; align-items: flex-end; gap: 5px; ${isMyMsg ? 'flex-direction: row-reverse;' : ''}">
-                            <div class="${isMyMsg ? 'user-msg' : 'bot-msg'}" style="margin: 0;">
+                            <div class="${isMyMsg ? 'user-msg' : 'bot-msg'}" style="margin: 0; position: relative;">
                                 <div>${msg.text}</div>
                                 <div style="margin-top: 8px; padding-top: 5px; border-top: 1px solid ${isMyMsg ? 'rgba(255,255,255,0.2)' : '#eee'};">
                                     <button id="${videoBtnId}" 
@@ -554,7 +548,7 @@
                                 </div>
                             </div>
                             
-                            <span style="font-size: 9px; color: #aaa; min-width: 45px; margin-bottom: 2px;">
+                            <span class="timestamp" style="font-size: 10px; color: #999; min-width: 35px; white-space: nowrap; margin-bottom: 2px;">
                                 ${displayTime}
                             </span>
                         </div>
@@ -575,7 +569,7 @@
                 return;
             }
         
-            // [추가] 클릭 즉시 버튼 비활성화 (중복 클릭 방지)
+            // 클릭 즉시 버튼 비활성화 (중복 클릭 방지)
             if (targetBtn) {
                 targetBtn.disabled = true;
                 targetBtn.innerText = "⌛ 요청 중...";
