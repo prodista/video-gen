@@ -115,27 +115,23 @@ async def get_messages(room_id: str):
 @app.post("/api/user/profile-image")
 async def upload_profile_image(participantId: str, file: UploadFile = File(...)):
     try:
-        # 1. 파일 확장자 추출 및 파일명 생성
         ext = file.filename.split(".")[-1]
         filename = f"profile_{participantId}.{ext}"
         
-        # 2. GCS 업로드 경로 설정
         blob = bucket.blob(f"profiles/{filename}")
-        
-        # 3. 업로드 및 공개 설정 (GCS 권한 오류 방지)
         blob.upload_from_file(file.file, content_type=file.content_type)
         try:
             blob.make_public()
         except:
-            # 버킷 설정에 따라 공개 설정이 막혀있을 수 있으므로 예외 처리
             pass
-            
-        img_url = blob.public_url
-
-        # 4. DB 업데이트 (pymongo는 await를 사용하지 않습니다)
+        
+        # 수동으로 공개 URL 생성 (버킷 이름과 파일 경로 조합)
+        img_url = f"https://storage.googleapis.com/{bucket.name}/profiles/{filename}"
+        
+        # DB에 저장
         db.users.update_one(
             {"participantId": participantId},
-            {"$set": {"profileImg": img_url, "lastUpdated": datetime.now(timezone(timedelta(hours=9))).isoformat()}},
+            {"$set": {"profileImg": img_url}}, 
             upsert=True
         )
         
