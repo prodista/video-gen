@@ -525,52 +525,79 @@
         // 메시지 렌더링 함수
         function renderMessageToContainer(msg) {
             const chatWindow = document.getElementById('chat-window');
+            
+            // 본인 여부 판별
             const isMyMsg = (msg.senderId === window.currentParticipantId);
         
-            const rawId = msg._id?.$oid || msg._id || "temp";
+            // 고유 ID 및 비디오 버튼 ID 설정
+            const rawId = msg._id?.$oid || msg._id || ("temp_" + Math.random().toString(36).substr(2, 9));
             const videoBtnId = `btn-video-${rawId}`;
             
-            // 날짜 처리
+            // 타임스탬프 처리 (서울 시간 기준)
             const rawDate = msg.timestamp || msg.createdAt;
             const date = new Date(rawDate);
             let displayTime = "--:--";
             
             if (!isNaN(date.getTime())) {
                 displayTime = date.toLocaleString('ko-KR', { 
-                    month: 'numeric', day: 'numeric', 
-                    hour: '2-digit', minute: '2-digit', 
-                    hour12: false, timeZone: 'Asia/Seoul' 
+                    month: 'numeric', 
+                    day: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit', 
+                    hour12: false,
+                    timeZone: 'Asia/Seoul' 
                 });
             }
         
-            const defaultImg = '/static/images/default-avatar.png';
-            const userImg = msg.profileImg || defaultImg;
+            // 프로필 사진 결정 로직
+            const defaultImg = 'https://via.placeholder.com/40'; // 기본 프로필 이미지 주소
+            let userImg = msg.profileImg;
         
-            const safeText = msg.text ? msg.text.replace(/'/g, "\\'") : "";
+            // 본인 메시지인데 사진 정보가 없다면 로컬 스토리지에서 시도
+            if (!userImg && isMyMsg) {
+                userImg = localStorage.getItem('userProfileImg');
+            }
+            
+            // 그래도 없다면 기본 이미지 사용
+            if (!userImg) {
+                userImg = defaultImg;
+            }
         
+            // 텍스트 내 특수문자(') 처리 (JS 에러 방지용)
+            const safeText = msg.text ? msg.text.replace(/'/g, "\\'").replace(/\n/g, " ") : "";
+        
+            // HTML 조립
             const messageHtml = `
                 <div class="message-wrapper ${isMyMsg ? 'my-msg' : 'other-msg'}" style="display: flex; margin-bottom: 15px; gap: 10px; ${isMyMsg ? 'flex-direction: row-reverse;' : ''}">
-                    <img src="${userImg}" class="profile-icon" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid #ddd;">
+                    <img src="${userImg}" 
+                         class="profile-icon" 
+                         onerror="this.onerror=null; this.src='${defaultImg}';"
+                         style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid #ddd; flex-shrink: 0;">
+                    
                     <div style="display: flex; flex-direction: column; align-items: ${isMyMsg ? 'flex-end' : 'flex-start'}; max-width: 75%;">
                         <span style="font-size: 11px; color: #888; margin-bottom: 4px;">${msg.senderId}</span>
+                        
                         <div style="display: flex; align-items: flex-end; gap: 5px; ${isMyMsg ? 'flex-direction: row-reverse;' : ''}">
-                            <div class="${isMyMsg ? 'user-msg' : 'bot-msg'}" style="margin: 0;">
+                            <div class="${isMyMsg ? 'user-msg' : 'bot-msg'}" style="margin: 0; padding: 12px 16px; border-radius: 15px; position: relative;">
                                 <div>${msg.text}</div>
                                 <div style="margin-top: 8px; padding-top: 5px; border-top: 1px solid ${isMyMsg ? 'rgba(255,255,255,0.2)' : '#eee'};">
                                     <button id="${videoBtnId}" 
                                             onclick="requestVideoGen('${rawId}', '${safeText}', '${videoBtnId}')" 
-                                            style="width:auto; padding:2px 6px; font-size:10px; background:#ff7b00; color:white; border:none; border-radius:4px; cursor:pointer;">
+                                            style="width:auto; padding:2px 8px; font-size:10px; background:#ff7b00; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">
                                         🎬 영상 지시
                                     </button>
                                 </div>
                             </div>
-                            <span class="timestamp" style="font-size: 9px; color: #999; min-width: 65px; white-space: nowrap; margin-bottom: 2px;">
+                            
+                            <span class="timestamp" style="font-size: 9px; color: #999; min-width: 65px; white-space: nowrap; margin-bottom: 2px; text-align: ${isMyMsg ? 'right' : 'left'};">
                                 ${displayTime}
                             </span>
                         </div>
                     </div>
                 </div>
             `;
+        
+            // 화면에 추가
             chatWindow.insertAdjacentHTML('beforeend', messageHtml);
         }
         
