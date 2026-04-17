@@ -356,9 +356,23 @@
         }
 
         // 메시지 수신 로직 (방 번호 동적 반영)
-        // 기존 Set 대신 localStorage에서 불러오거나 빈 배열로 시작
-        let loadedIdsArray = JSON.parse(localStorage.getItem('loadedMsgIds')) || [];
-        let lastLoadedMessageIds = new Set(loadedIdsArray);
+        window.onload = function() {
+            const savedId = localStorage.getItem('pId');
+            const savedRoom = localStorage.getItem('roomId');
+            const savedStep = localStorage.getItem('currentStep');
+        
+            if (savedId && savedRoom && savedStep === 'chat_log') {
+                window.currentParticipantId = savedId;
+                window.currentRoomId = savedRoom;
+                
+                // [중요] 새로고침 시에는 중복 방지 ID 리스트를 비워줍니다.
+                // 그래야 DB에 있는 이전 대화들을 다시 화면에 그릴 수 있습니다.
+                localStorage.removeItem('loadedMsgIds');
+                lastLoadedMessageIds = new Set(); 
+        
+                startChatSession(); 
+            }
+        };
         
         async function fetchMessages() {
             if (!window.currentRoomId) return;
@@ -375,12 +389,11 @@
                 const isAtBottom = (chatWindow.scrollHeight - chatWindow.scrollTop) <= (chatWindow.clientHeight + 100);
         
                 if (messages && messages.length > 0) {
+                    // [참고] 만약 새로고침 후 첫 로드라면 모든 메시지를 그립니다.
                     messages.forEach(msg => {
-                        // [중요] ID 추출 (문자열로 통일)
                         const rawId = msg._id?.$oid || msg._id || msg.id;
                         const msgId = String(rawId);
         
-                        // [중복 체크] 이미 화면에 그린 ID가 아닐 때만 렌더링
                         if (msgId && !lastLoadedMessageIds.has(msgId)) {
                             renderMessageToContainer(msg);
                             lastLoadedMessageIds.add(msgId);
@@ -389,22 +402,12 @@
                     });
         
                     if (hasNewMessage) {
-                        // 1. 중복 방지 리스트 저장
+                        // 중복 방지 ID 리스트 업데이트
                         localStorage.setItem('loadedMsgIds', JSON.stringify(Array.from(lastLoadedMessageIds)));
                         
-                        // 2. 마지막 타임스탬프 업데이트 (가장 최신 메시지의 timestamp 기준)
-                        const latestMsg = messages[messages.length - 1];
-                        const latestTime = latestMsg.timestamp || latestMsg.createdAt;
-                        if (latestTime) {
-                            localStorage.setItem('lastTimestamp', latestTime);
-                        }
-        
-                        // 3. 스크롤 처리
+                        // 스크롤 처리
                         if (isAtBottom) {
                             setTimeout(scrollToBottom, 50);
-                            alertBtn.style.display = 'none';
-                        } else {
-                            alertBtn.style.display = 'block';
                         }
                     }
                 }
