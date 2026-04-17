@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pymongo import MongoClient
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from bson import ObjectId
 
 app = FastAPI()
@@ -92,7 +92,7 @@ async def update_video(data: dict):
 async def send_message(request: Request):
     data = await request.json()
     # 클라이언트가 보낸 시간 대신 서버의 정확한 시간을 timestamp로 저장
-    data["timestamp"] = datetime.now() 
+    data["timestamp"] = datetime.now(timezone(timedelta(hours=9))) .isoformat()
     db['messages'].insert_one(data)
     return {"status": "success"}
 
