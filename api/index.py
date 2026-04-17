@@ -115,24 +115,36 @@ async def get_messages(room_id: str):
 @app.post("/api/user/profile-image")
 async def upload_profile_image(participantId: str, file: UploadFile = File(...)):
     try:
+        # 1. 파일 확장자 추출 및 파일명 생성
         ext = file.filename.split(".")[-1]
         filename = f"profile_{participantId}.{ext}"
+        
+        # 2. GCS 업로드 경로 설정
         blob = bucket.blob(f"profiles/{filename}")
         
+        # 3. 업로드 및 공개 설정 (GCS 권한 오류 방지)
         blob.upload_from_file(file.file, content_type=file.content_type)
-        blob.make_public()
+        try:
+            blob.make_public()
+        except:
+            # 버킷 설정에 따라 공개 설정이 막혀있을 수 있으므로 예외 처리
+            pass
+            
         img_url = blob.public_url
 
-        # db.users 컬렉션에 프로필 경로 업데이트
+        # 4. DB 업데이트 (pymongo는 await를 사용하지 않습니다)
         db.users.update_one(
             {"participantId": participantId},
-            {"$set": {"profileImg": img_url, "lastUpdated": datetime.now()}},
+            {"$set": {"profileImg": img_url, "lastUpdated": datetime.now(KST)}},
             upsert=True
         )
+        
         return {"status": "success", "profileImg": img_url}
+        
     except Exception as e:
-        return {"status": "error", "message": str(e)}
-
+        print(f"Upload Error: {str(e)}") # 서버 로그 확인용
+        return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
+        
 # 영상 업로드 함수 (내부 로직용)
 async def upload_video_to_gcs(local_path, room_id, sender_id):
     timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
