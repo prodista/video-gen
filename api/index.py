@@ -21,9 +21,21 @@ app.add_middleware(
 
 # MongoDB 연결
 MONGO_URI = os.environ.get("MONGODB_URI")
-client = MongoClient(MONGO_URI)
-db = client['video_gen']
-collection = db['users']
+mongo_client = MongoClient(MONGO_URI) # 변수명 client 중복 방지를 위해 mongo_client로 변경
+db = mongo_client['video_gen']
+
+# --- GCS 설정 부분 ---
+def get_gcs_client():
+    key_json = os.getenv("GCP_SERVICE_ACCOUNT_JSON")
+    if key_json:
+        credentials_info = json.loads(key_json)
+        return storage.Client.from_service_account_info(credentials_info)
+    return storage.Client()
+
+storage_client = get_gcs_client()
+bucket = storage_client.bucket("video-gen-chat")
+
+# --- API 엔드포인트 ---
 
 @app.get("/api/health")
 def health_check():
@@ -35,147 +47,97 @@ async def check_room(request: Request):
     room_id = data.get("roomId")
     input_pw = data.get("password")
     
-    # DB에서 해당 방 정보를 찾음
     room = db['rooms'].find_one({"roomId": room_id})
     
     if not room:
-        # 방이 없으면 새로 생성 (처음 들어온 유저가 비번 결정)
         db['rooms'].insert_one({"roomId": room_id, "password": input_pw})
         return {"status": "created", "message": "새로운 방이 생성되었습니다."}
     else:
-        # 방이 있으면 비번 비교
         if room['password'] == input_pw:
             return {"status": "success", "message": "입장 성공"}
         else:
             return JSONResponse(status_code=401, content={"status": "fail", "message": "비밀번호가 틀립니다."})
 
-# 로그인/조회 (HTML의 fetch('/api/user/${pId}')와 매칭)
+# 로그인/조회
 @app.get("/api/user/{participant_id}")
 async def get_user(participant_id: str):
-    user = collection.find_one({"participantId": participant_id}, {"_id": 0})
+    user = db['users'].find_one({"participantId": participant_id}, {"_id": 0})
     if user:
         return user
     else:
         return JSONResponse(status_code=404, content={"message": "User not found"})
 
-# 영상 URL 업데이트 (HTML의 fetch('/api/user/update-video')와 매칭)
+# 영상 요청 시 timestamp로 기록
 @app.post("/api/user/update-video")
 async def update_video(data: dict):
     try:
-        # 프론트에서 보낸 데이터 추출
         p_id = data.get("participantId")
         msg_id = data.get("sourceMsgId")
         text = data.get("promptText")
         
-        # MongoDB에 저장 (이 코드가 반드시 있어야 합니다!)
         db.video_requests.insert_one({
             "participantId": p_id,
             "sourceMsgId": msg_id,
             "promptText": text,
             "status": "pending",
-            "createdAt": datetime.now()
+            "timestamp": datetime.now() # createdAt -> timestamp로 변경
         })
         
         return {"status": "success", "message": "기록 완료"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
-# 히스토리 불러오기
-@app.get("/api/history")
-async def get_history():
-    try:
-        data = list(collection.find({}, {"_id": 0}).sort("_id", -1).limit(10))
-        return data
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
-
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
-
 # 채팅 메시지 보내기
 @app.post("/api/chat/send")
 async def send_message(request: Request):
     data = await request.json()
-    # 여기서 전해받은 데이터를 MongoDB에 넣음
+    # 클라이언트가 보낸 시간 대신 서버의 정확한 시간을 timestamp로 저장
+    data["timestamp"] = datetime.now() 
     db['messages'].insert_one(data)
     return {"status": "success"}
 
-# 채팅 메시지 리스트 가져오기 (폴링용)
+# 채팅 메시지 리스트 가져오기
 @app.get("/api/chat/receive/{room_id}")
 async def get_messages(room_id: str):
     try:
-        # 해당 방의 메시지들을 시간순(오름차순)으로 정렬하여 50개 가져옴
-        messages = list(db['messages'].find({"roomId": room_id}).sort("timestamp", 1).limit(50))
+        # timestamp 필드를 기준으로 오름차순 정렬
+        messages = list(db['messages'].find({"roomId": room_id}).sort("timestamp", 1).limit(100))
         for msg in messages:
-            msg["_id"] = str(msg["_id"]) # JSON 변환을 위해 문자열로 변경
+            msg["_id"] = str(msg["_id"])
+            # datetime 객체를 ISO 포맷 문자열로 변환 (프론트엔드 Date 객체 대응)
+            if "timestamp" in msg and isinstance(msg["timestamp"], datetime):
+                msg["timestamp"] = msg["timestamp"].isoformat()
         return messages
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
 
+# 프로필 이미지 업로드
 @app.post("/api/user/profile-image")
 async def upload_profile_image(participantId: str, file: UploadFile = File(...)):
     try:
-        # 고정 파일명 설정 (타임스탬프 제외)
         ext = file.filename.split(".")[-1]
         filename = f"profile_{participantId}.{ext}"
-        
-        # GCS 경로 설정 (항상 같은 경로에 저장되어 덮어쓰기 발생)
         blob = bucket.blob(f"profiles/{filename}")
         
-        # 업로드 및 공개 설정
         blob.upload_from_file(file.file, content_type=file.content_type)
         blob.make_public()
-        
         img_url = blob.public_url
 
-        # DB 업데이트 (파일 이름이 같더라도 혹시 모를 확장자 변경 대비)
-        await db.users.update_one(
+        # db.users 컬렉션에 프로필 경로 업데이트
+        db.users.update_one(
             {"participantId": participantId},
-            {"$set": {"profileImg": img_url}},
+            {"$set": {"profileImg": img_url, "lastUpdated": datetime.now()}},
             upsert=True
         )
-        
         return {"status": "success", "profileImg": img_url}
-        
     except Exception as e:
         return {"status": "error", "message": str(e)}
-        
-# Vercel에 등록한 환경변수 문자열을 가져옴
-json_string = os.getenv("GCP_SERVICE_ACCOUNT_JSON")
 
-if json_string:
-    # 문자열을 파이썬 딕셔너리로 변환
-    info = json.loads(json_string)
-    # 구글 인증 객체 생성
-    credentials = service_account.Credentials.from_service_account_info(info)
-    storage_client = storage.Client(credentials=credentials)
-else:
-    # 로컬 개발 환경용 (로컬에 파일이 있을 때)
-    storage_client = storage.Client()
-
-# Vercel 환경변수에서 JSON 키를 읽어오는 방식
-def get_gcs_client():
-    # 로컬 테스트 시에는 JSON 파일 경로를, Vercel에서는 환경변수를 사용
-    key_json = os.getenv("GCP_SERVICE_ACCOUNT_JSON")
-    if key_json:
-        credentials_info = json.loads(key_json)
-        return storage.Client.from_service_account_info(credentials_info)
-    return storage.Client() # 로컬 권한 설정 
-
-client = get_gcs_client()
-bucket = client.bucket("video-gen-chat")
-
+# 영상 업로드 함수 (내부 로직용)
 async def upload_video_to_gcs(local_path, room_id, sender_id):
-    # 파일명 생성
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"video_{timestamp}_{sender_id}.mp4"
-    
-    # GCS 경로 설정
+    timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"video_{timestamp_str}_{sender_id}.mp4"
     blob = bucket.blob(f"rooms/{room_id}/{filename}")
-    
-    # 업로드 및 공개 설정
     blob.upload_from_filename(local_path)
     blob.make_public()
-    
     return blob.public_url
