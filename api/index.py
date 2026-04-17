@@ -92,7 +92,7 @@ async def update_video(data: dict):
 async def send_message(request: Request):
     data = await request.json()
     # 클라이언트가 보낸 시간 대신 서버의 정확한 시간을 timestamp로 저장
-    data["timestamp"] = datetime.now(timezone(timedelta(hours=9))) .isoformat()
+    data["timestamp"] = datetime.now(timezone(timedelta(hours=9))).isoformat()
     db['messages'].insert_one(data)
     return {"status": "success"}
 
@@ -135,7 +135,7 @@ async def upload_profile_image(participantId: str, file: UploadFile = File(...))
         # 4. DB 업데이트 (pymongo는 await를 사용하지 않습니다)
         db.users.update_one(
             {"participantId": participantId},
-            {"$set": {"profileImg": img_url, "lastUpdated": datetime.now(KST)}},
+            {"$set": {"profileImg": img_url, "lastUpdated": datetime.now(timezone(timedelta(hours=9))).isoformat()}},
             upsert=True
         )
         
