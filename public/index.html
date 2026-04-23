@@ -601,57 +601,39 @@
             chatWindow.insertAdjacentHTML('beforeend', messageHtml);
         }
         
-        // 영상 생성 요청 (실험 데이터 기록용)
-        async function requestVideoGen(msgId, text, btnId) {
-            const myId = window.currentParticipantId || localStorage.getItem('pId');
-            const targetBtn = document.getElementById(btnId);
-        
-            if (!myId) {
-                alert("유저 정보를 찾을 수 없습니다.");
-                return;
-            }
-        
-            // 클릭 즉시 버튼 비활성화 (중복 클릭 방지)
-            if (targetBtn) {
-                targetBtn.disabled = true;
-                targetBtn.innerText = "⌛ 요청 중...";
-                targetBtn.style.background = "#ccc"; // 회색으로 변경
-                targetBtn.style.cursor = "not-allowed";
-            }
+        // 영상 생성 요청
+        async function requestVideoGen(msgId, promptText, buttonId) {
+            const btn = document.getElementById(buttonId);
+            btn.disabled = true;
+            btn.innerText = "🎬 생성 중...";
         
             try {
-                const response = await fetch('/api/user/update-video', {
+                const response = await fetch('/api/generate-video', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        participantId: myId,
-                        sourceMsgId: msgId,
-                        promptText: text,
-                        videoUrl: "pending"
-                    })
+                    body: JSON.stringify({ prompt: promptText })
                 });
         
-                if (response.ok) {
-                    // 요청 성공 시 문구 변경
-                    if (targetBtn) targetBtn.innerText = "✅ 요청 완료";
-                    console.log("DB 기록 성공");
+                const data = await response.json();
+        
+                if (data.status === "success") {
+                    // 영상이 생성되면 해당 메시지 하단에 비디오 태그 추가
+                    const container = btn.parentElement;
+                    container.innerHTML = `
+                        <video width="100%" controls style="border-radius: 8px; margin-top: 10px;">
+                            <source src="${data.video_url}" type="video/mp4">
+                            브라우저가 영상을 지원하지 않습니다.
+                        </video>
+                    `;
                 } else {
-                    // 실패 시 다시 시도할 수 있도록 복구
-                    alert("기록 실패. 다시 시도해주세요.");
-                    if (targetBtn) {
-                        targetBtn.disabled = false;
-                        targetBtn.innerText = "🎬 영상 지시";
-                        targetBtn.style.background = "#ff7b00";
-                    }
+                    alert("영상 생성 실패: " + data.detail);
+                    btn.disabled = false;
+                    btn.innerText = "🎬 영상 지시";
                 }
             } catch (err) {
-                console.error("전송 에러:", err);
-                // 네트워크 에러 시 복구
-                if (targetBtn) {
-                    targetBtn.disabled = false;
-                    targetBtn.innerText = "🎬 영상 지시";
-                    targetBtn.style.background = "#ff7b00";
-                }
+                console.error(err);
+                btn.disabled = false;
+                btn.innerText = "🎬 영상 지시";
             }
         }
         
