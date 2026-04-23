@@ -138,7 +138,7 @@ async def get_messages(room_id: str):
             msg["_id"] = str(msg["_id"])
             # datetime 객체를 ISO 포맷 문자열로 변환 (프론트엔드 Date 객체 대응)
             if "timestamp" in msg and isinstance(msg["timestamp"], datetime):
-                msg["timestamp"] = msg["timestamp"].isoformat()
+                msg["timestamp"] = msg["timestamp"].astimezone(KST).isoformat()
         return messages
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
