@@ -2,14 +2,44 @@ import os
 import json
 from google.cloud import storage
 from google.oauth2 import service_account
-from fastapi import FastAPI, Request, File, UploadFile
+from fastapi import FastAPI, Request, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+import vertexai
+from vertexai.preview.vision_models import VideoGenerationModel
 from pymongo import MongoClient
 from datetime import datetime, timedelta, timezone
 from bson import ObjectId
 
 app = FastAPI()
+
+# Vertex AI 초기화
+vertexai.init(project=os.getenv("GCP_PROJECT_ID"), location=os.getenv("GCP_LOCATION"))
+model = VideoGenerationModel.from_pretrained("veo-3-1-lite-001")
+
+class VideoRequest(BaseModel):
+    prompt: str
+
+@app.post("/api/generate-video")
+async def generate_video(request: VideoRequest):
+    try:
+        # Veo 모델에 영상 생성 요청
+        # 실제 환경에서는 비동기 작업(Job)으로 처리하고 ID를 반환하는 것이 좋습니다.
+        job = model.generate_video(
+            prompt=request.prompt,
+            # lite 모델의 해상도 및 프레임 설정
+            video_capability="generation",
+            aspect_ratio="16:9"
+        )
+        
+        # 영상 생성 완료 대기 (Vercel Pro 플랜 이상 권장)
+        result = job.result()
+        video_uri = result.video.uri # GCS URI 반환
+        
+        return {"status": "success", "video_url": video_uri}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # CORS 설정
 app.add_middleware(
