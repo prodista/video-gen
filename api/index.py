@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import vertexai
-from vertexai.preview.vision_models import VideoGenerationModel
+from vertexai.generative_models import GenerativeModel
 from pymongo import MongoClient
 from datetime import datetime, timedelta, timezone
 from bson import ObjectId
@@ -35,8 +35,10 @@ if sa_json:
         storage_client = storage.Client(credentials=credentials, project=project_id)
         bucket_name = f"{project_id}-vcm" # 또는 본인의 버킷 이름
         bucket = storage_client.bucket(bucket_name)
-        
+
+        video_model = GenerativeModel("veo-3.1-lite-preview-0502")
         print("✅ GCP/Vertex AI 인증 성공")
+        
     except Exception as e:
         print(f"❌ GCP 인증 실패: {e}")
         # 이 에러가 발생하면 Vercel 로그에 출력됩니다.
