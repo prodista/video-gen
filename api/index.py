@@ -12,6 +12,8 @@ from pymongo import MongoClient
 from datetime import datetime, timedelta, timezone
 from bson import ObjectId
 
+app = FastAPI()
+
 # CORS 설정
 app.add_middleware(
     CORSMiddleware,
@@ -20,8 +22,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-app = FastAPI()
 
 KST = timezone(timedelta(hours=9))
 
