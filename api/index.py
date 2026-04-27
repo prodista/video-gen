@@ -12,6 +12,15 @@ from pymongo import MongoClient
 from datetime import datetime, timedelta, timezone
 from bson import ObjectId
 
+# CORS 설정
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app = FastAPI()
 
 KST = timezone(timedelta(hours=9))
@@ -94,15 +103,6 @@ async def generate_video(request: Request):
         print(f"❌ 영상 생성 오류: {str(e)}")
         return JSONResponse(status_code=500, content={"error": str(e)})
         
-# CORS 설정
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 # MongoDB 연결
 MONGO_URI = os.environ.get("MONGODB_URI")
 mongo_client = MongoClient(MONGO_URI) # 변수명 client 중복 방지를 위해 mongo_client로 변경
