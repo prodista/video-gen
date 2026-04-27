@@ -388,21 +388,32 @@
             if (!window.currentRoomId) return;
         
             try {
-                const response = await fetch(`/api/chat/receive/${window.currentRoomId}`);
+                // GET 방식이므로 별도의 method 설정 없이 호출합니다.
+                const response = await fetch(`/api/chat/receive/${window.currentRoomId}`, {
+                    method: 'GET', // 명시적으로 GET 설정 (기본값이기도 함)
+                    headers: {
+                        'Cache-Control': 'no-cache' // 실시간 갱신을 위해 캐시 방지 추가
+                    }
+                });
+        
+                // 405 에러가 난다면 여기서 체크됩니다.
+                if (response.status === 405) {
+                    console.error("서버 설정 오류: GET 요청이 허용되지 않습니다. 백엔드 @app.get을 확인하세요.");
+                    return;
+                }
+        
                 if (!response.ok) return;
         
                 const messages = await response.json();
                 const chatWindow = document.getElementById('chat-window');
-                const alertBtn = document.getElementById('new-msg-alert');
                 
                 let hasNewMessage = false;
-                const isAtBottom = (chatWindow.scrollHeight - chatWindow.scrollTop) <= (chatWindow.clientHeight + 100);
+                const isAtBottom = (chatWindow.scrollHeight - chatWindow.scrollTop) <= (chatWindow.clientHeight + 150);
         
-                if (messages && messages.length > 0) {
-                    // [참고] 만약 새로고침 후 첫 로드라면 모든 메시지를 그립니다.
+                if (messages && Array.isArray(messages)) {
                     messages.forEach(msg => {
-                        const rawId = msg._id?.$oid || msg._id || msg.id;
-                        const msgId = String(rawId);
+                        // MongoDB의 _id ($oid) 대응
+                        const msgId = msg._id?.$oid || msg._id || String(msg.id);
         
                         if (msgId && !lastLoadedMessageIds.has(msgId)) {
                             renderMessageToContainer(msg);
@@ -412,17 +423,14 @@
                     });
         
                     if (hasNewMessage) {
-                        // 중복 방지 ID 리스트 업데이트
                         localStorage.setItem('loadedMsgIds', JSON.stringify(Array.from(lastLoadedMessageIds)));
-                        
-                        // 스크롤 처리
                         if (isAtBottom) {
                             setTimeout(scrollToBottom, 50);
                         }
                     }
                 }
             } catch (err) {
-                console.error("데이터 동기화 실패:", err);
+                console.error("데이터 동기화 실패 (네트워크 에러 등):", err);
             }
         }
         
