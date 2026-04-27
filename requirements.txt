@@ -1,10 +1,10 @@
-fastapi
-uvicorn
-pymongo[srv]
-google-cloud-storage
-dnspython
+fastapi==0.110.0
+uvicorn==0.27.1
+pymongo[srv]==4.6.2
+dnspython==2.6.1
 python-multipart
 motor
-google-auth
-google-cloud-aiplatform
+google-auth==2.28.2
+google-cloud-aiplatform==1.44.0
+google-cloud-storage==2.15.0
 google-generativeai
