@@ -20,54 +20,80 @@ KST = timezone(timedelta(hours=9))
 sa_json = os.environ.get("GCP_SERVICE_ACCOUNT_JSON")
 project_id = os.environ.get("GCP_PROJECT_ID")
 location = os.environ.get("GCP_LOCATION", "us-central1")
+bucket_name = os.environ.get("GCP_BUCKET_NAME") # GCS 버킷 이름 환경변수
+
+video_model = None
+storage_client = None
 
 if sa_json:
     try:
-        # 문자열을 JSON 객체로 변환
         sa_info = json.loads(sa_json)
-        # 서비스 계정 인증 객체 생성
         credentials = service_account.Credentials.from_service_account_info(sa_info)
         
-        # [핵심] Vertex AI 초기화 (인증 정보 포함)
+        # Vertex AI 초기화
         vertexai.init(project=project_id, location=location, credentials=credentials)
-        
-        # [핵심] GCS 클라이언트 초기화 (인증 정보 포함)
+        # GCS 클라이언트 초기화
         storage_client = storage.Client(credentials=credentials, project=project_id)
-        bucket_name = f"{project_id}-vcm" # 또는 본인의 버킷 이름
-        bucket = storage_client.bucket(bucket_name)
-
-        video_model = GenerativeModel("veo-3.1-lite-preview-0502")
-        print("✅ GCP/Vertex AI 인증 성공")
         
+        # 모델 정의 (변수명: video_model)
+        video_model = GenerativeModel("veo-3.1-lite-preview-0502")
+        print("✅ Vertex AI & Video Model 초기화 성공")
     except Exception as e:
-        print(f"❌ GCP 인증 실패: {e}")
-        # 이 에러가 발생하면 Vercel 로그에 출력됩니다.
-else:
-    print("⚠️ 경고: GCP_SERVICE_ACCOUNT_JSON 변수가 설정되지 않았습니다.")
+        print(f"❌ 초기화 실패: {e}")
 
 class VideoRequest(BaseModel):
     prompt: str
 
 @app.post("/api/generate-video")
-async def generate_video(request: VideoRequest):
-    try:
-        # Veo 모델에 영상 생성 요청
-        # 실제 환경에서는 비동기 작업(Job)으로 처리하고 ID를 반환하는 것이 좋습니다.
-        job = model.generate_video(
-            prompt=request.prompt,
-            # lite 모델의 해상도 및 프레임 설정
-            video_capability="generation",
-            aspect_ratio="16:9"
-        )
-        
-        # 영상 생성 완료 대기 (Vercel Pro 플랜 이상 권장)
-        result = job.result()
-        video_uri = result.video.uri # GCS URI 반환
-        
-        return {"status": "success", "video_url": video_uri}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+async def generate_video(request: Request):
+    global video_model, storage_client
+    
+    if not video_model:
+        raise HTTPException(status_code=500, detail="서버 모델이 준비되지 않았습니다.")
 
+    try:
+        data = await request.json()
+        prompt = data.get("prompt")
+        room_id = data.get("roomId")
+        p_id = data.get("pId")
+
+        if not prompt:
+            raise HTTPException(status_code=400, detail="프롬프트가 없습니다.")
+
+        # [STEP 1] 영상 생성 요청 (Veo 모델 호출)
+        response = video_model.generate_content(prompt) 
+        
+        # [STEP 2] 생성된 바이너리 데이터 추출 (SDK 구조에 따라 다름)
+        video_bytes = response.candidates[0].content.parts[0].inline_data.data
+        
+        # [STEP 3] GCS에 업로드
+        file_name = f"video_{room_id}_{datetime.now().strftime('%Y%m%d%H%M%S')}.mp4"
+        blob = storage_client.bucket(bucket_name).blob(f"generated_videos/{file_name}")
+        
+        blob.upload_from_string(video_bytes, content_type='video/mp4')
+        video_url = blob.public_url # 공개 URL 생성
+
+        # [STEP 4] DB에 메시지 저장 (유저에게 보여주기 위함)
+        video_message = {
+            "roomId": room_id,
+            "senderId": "system_ai",
+            "text": f"🎬 생성된 영상: {prompt}",
+            "videoUrl": video_url,
+            "createdAt": datetime.now(KST),
+            "type": "video"
+        }
+        db.messages.insert_one(video_message)
+
+        return JSONResponse(content={
+            "status": "success",
+            "videoUrl": video_url,
+            "message": "영상이 성공적으로 생성되었습니다."
+        })
+
+    except Exception as e:
+        print(f"❌ 영상 생성 오류: {str(e)}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+        
 # CORS 설정
 app.add_middleware(
     CORSMiddleware,
