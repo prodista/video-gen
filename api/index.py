@@ -182,18 +182,20 @@ async def send_message(request: Request):
 
 # 채팅 메시지 리스트 가져오기
 @app.get("/api/chat/receive/{room_id}")
-async def get_messages(room_id: str):
+async def receive_messages(room_id: str):
     try:
-        # timestamp 필드를 기준으로 오름차순 정렬
-        messages = list(db['messages'].find({"roomId": room_id}).sort("timestamp", 1).limit(100))
+        # MongoDB에서 해당 방의 메시지 가져오기
+        messages = list(db.messages.find({"roomId": room_id}).sort("createdAt", 1))
+        
+        # ObjectId를 문자열로 변환하여 JSON 직렬화 가능하게 만듦
         for msg in messages:
             msg["_id"] = str(msg["_id"])
-            # datetime 객체를 ISO 포맷 문자열로 변환 (프론트엔드 Date 객체 대응)
-            if "timestamp" in msg and isinstance(msg["timestamp"], datetime):
-                msg["timestamp"] = msg["timestamp"].astimezone(KST).isoformat()
-        return messages
+            if "createdAt" in msg:
+                msg["createdAt"] = msg["createdAt"].isoformat()
+                
+        return JSONResponse(content=messages)
     except Exception as e:
-        return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
 # 프로필 이미지 업로드
 @app.post("/api/user/profile-image")
