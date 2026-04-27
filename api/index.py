@@ -17,7 +17,9 @@ app = FastAPI()
 KST = timezone(timedelta(hours=9))
 
 # Vertex AI 초기화
-vertexai.init(project=os.getenv("GCP_PROJECT_ID"), location=os.getenv("GCP_LOCATION"))
+GCP_LOCATION = os.getenv("GCP_LOCATION", "us-central1")
+GCP_PROJECT_ID = os.getenv("GCP_PROJECT_ID")
+vertexai.init(project=GCP_PROJECT_ID, location=GCP_LOCATION)
 model = VideoGenerationModel.from_pretrained("veo-3-1-lite-001")
 
 class VideoRequest(BaseModel):
