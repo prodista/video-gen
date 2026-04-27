@@ -17,19 +17,31 @@ app = FastAPI()
 KST = timezone(timedelta(hours=9))
 
 # 환경 변수 가져오기
-service_account_info = os.getenv("GCP_SERVICE_ACCOUNT_JSON")
-project_id = os.getenv("GCP_PROJECT_ID")
-location = os.getenv("GCP_LOCATION", "us-central1")
+sa_json = os.environ.get("GCP_SERVICE_ACCOUNT_JSON")
+project_id = os.environ.get("GCP_PROJECT_ID")
+location = os.environ.get("GCP_LOCATION", "us-central1")
 
-try:
-    if sa_json:
+if sa_json:
+    try:
+        # 문자열을 JSON 객체로 변환
         sa_info = json.loads(sa_json)
+        # 서비스 계정 인증 객체 생성
         credentials = service_account.Credentials.from_service_account_info(sa_info)
+        
+        # [핵심] Vertex AI 초기화 (인증 정보 포함)
         vertexai.init(project=project_id, location=location, credentials=credentials)
-    else:
-        print("경고: GCP_SERVICE_ACCOUNT_JSON 변수가 없습니다.")
-except Exception as e:
-    print(f"Vertex AI 초기화 실패: {e}")
+        
+        # [핵심] GCS 클라이언트 초기화 (인증 정보 포함)
+        storage_client = storage.Client(credentials=credentials, project=project_id)
+        bucket_name = f"{project_id}-vcm" # 또는 본인의 버킷 이름
+        bucket = storage_client.bucket(bucket_name)
+        
+        print("✅ GCP/Vertex AI 인증 성공")
+    except Exception as e:
+        print(f"❌ GCP 인증 실패: {e}")
+        # 이 에러가 발생하면 Vercel 로그에 출력됩니다.
+else:
+    print("⚠️ 경고: GCP_SERVICE_ACCOUNT_JSON 변수가 설정되지 않았습니다.")
 
 class VideoRequest(BaseModel):
     prompt: str
@@ -58,6 +70,7 @@ async def generate_video(request: VideoRequest):
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
