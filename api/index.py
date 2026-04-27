@@ -16,11 +16,20 @@ app = FastAPI()
 
 KST = timezone(timedelta(hours=9))
 
-# Vertex AI 초기화
-GCP_LOCATION = os.getenv("GCP_LOCATION", "us-central1")
-GCP_PROJECT_ID = os.getenv("GCP_PROJECT_ID")
-vertexai.init(project=GCP_PROJECT_ID, location=GCP_LOCATION)
-model = VideoGenerationModel.from_pretrained("veo-3-1-lite-001")
+# 환경 변수 가져오기
+service_account_info = os.getenv("GCP_SERVICE_ACCOUNT_JSON")
+project_id = os.getenv("GCP_PROJECT_ID")
+location = os.getenv("GCP_LOCATION", "us-central1")
+
+if service_account_info:
+    # 문자열로 들어온 JSON을 사전(dict) 객체로 변환
+    info = json.loads(service_account_info)
+    credentials = service_account.Credentials.from_service_account_info(info)
+    
+    # Vertex AI 초기화
+    vertexai.init(project=project_id, location=location, credentials=credentials)
+else:
+    print("CRITICAL: GCP_SERVICE_ACCOUNT_JSON is missing!")
 
 class VideoRequest(BaseModel):
     prompt: str
