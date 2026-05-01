@@ -45,7 +45,7 @@ if sa_json:
         storage_client = storage.Client(credentials=credentials, project=project_id)
         
         # 모델 정의 (변수명: video_model)
-        video_model = GenerativeModel("veo-3.1-lite-preview-0502")
+        video_model = GenerativeModel("veo-3.1-lite-generate-001")
         print("✅ Vertex AI & Video Model 초기화 성공")
     except Exception as e:
         print(f"❌ 초기화 실패: {e}")
