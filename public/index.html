@@ -486,24 +486,29 @@
         
         // 3. Veo/Sora 영상 생성 함수
         async function generateVideo() {
-            const pId = document.getElementById('participantId').value;
-            alert("영상을 생성합니다...");
+            try {
+                const response = await fetch('/api/generate-video', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: userPrompt,
+                        roomId: window.currentRoomId,
+                        pId: window.currentParticipantId
+                    })
+                });
         
-            // 실제로는 여기서 AI API(Luma 등)를 호출하고 URL을 받아옴
-            const fakeVideoUrl = "https://example.com/generated-video.mp4"; 
+                const result = await response.json();
         
-            // 생성된 URL을 MongoDB에 저장하기 위해 백엔드 호출
-            await fetch('/api/user/update-video', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    participantId: pId,
-                    videoUrl: fakeVideoUrl
-                })
-            });
+                if (!response.ok) {
+                    // result.error나 result.detail이 없으면 서버 상태 코드를 보여줌
+                    throw new Error(result.error || result.detail || `서버 에러 (${response.status})`);
+                }
         
-            alert("영상 저장 완료!");
-            showSection('dashboard-section');
+                alert("영상 생성 성공!");
+            } catch (err) {
+                console.error("상세 에러:", err);
+                alert("영상 생성 실패: " + err.message); // 이제 undefined 대신 실제 이유가 뜹니다.
+            }
         }
 
         // 화면에 말풍선과 [영상 생성] 버튼 그리기
