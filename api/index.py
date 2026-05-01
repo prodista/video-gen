@@ -1,6 +1,7 @@
 import os
 import json
-from google.cloud import storage
+from google.cloud import storage, aiplatform
+from google.protobuf import json_format
 from google.oauth2 import service_account
 from fastapi import FastAPI, Request, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -55,50 +56,43 @@ class VideoRequest(BaseModel):
 
 @app.post("/api/generate-video")
 async def generate_video(request: Request):
-    global video_model, storage_client
-    
     try:
         data = await request.json()
         prompt = data.get("prompt")
         room_id = data.get("roomId")
 
-        if not video_model:
-            return JSONResponse(status_code=500, content={"error": "모델이 준비되지 않았습니다."})
+        # 1. Vertex AI 엔드포인트 설정
+        client_options = {"api_endpoint": f"{os.environ.get('GCP_LOCATION')}-aiplatform.googleapis.com"}
+        client = aiplatform.gapic.PredictionServiceClient(client_options=client_options)
 
-        # 1. 영상 생성 요청 (Veo 모델 호출)
-        response = video_model.generate_content(
-            f"Generate a high-quality video based on this prompt: {prompt}"
+        endpoint = f"projects/{os.environ.get('GCP_PROJECT_ID')}/locations/{os.environ.get('GCP_LOCATION')}/publishers/google/models/veo-3.1-lite-generate-001"
+
+        # 2. Veo 전용 요청 파라미터 구성
+        instance = json_format.ParseDict({
+            "prompt": prompt
+        }, {})
+        
+        parameters = json_format.ParseDict({
+            "sampleCount": 1,
+            "aspectRatio": "16:9",
+            "durationSeconds": 5
+        }, {})
+
+        # 3. 비동기 생성 요청 (LRO 호출)
+        operation = client.predict_long_running(
+            endpoint=endpoint,
+            instances=[instance],
+            parameters=parameters,
         )
 
-        # 2. 결과물에서 영상 데이터(Byte) 추출
-        try:
-            video_part = response.candidates[0].content.parts[0]
-            # 만약 inline_data 형식이면:
-            video_bytes = video_part.inline_data.data
-        except:
-            return JSONResponse(status_code=500, content={"error": "영상 데이터를 추출하지 못했습니다."})
+        print(f"영상 생성 시작 (작업 ID: {operation.operation.name})")
 
-        # 3. GCS(저장소)에 업로드
-        bucket_name = os.environ.get("GCP_BUCKET_NAME")
-        file_name = f"videos/{room_id}_{datetime.now().strftime('%H%M%S')}.mp4"
-        blob = storage_client.bucket(bucket_name).blob(file_name)
-        
-        # 바이너리 데이터 업로드 및 권한 설정
-        blob.upload_from_string(video_bytes, content_type='video/mp4')
-        video_url = blob.public_url # 공개 URL 생성
+        response = operation.result(timeout=90) 
 
-        # 4. DB에 메시지 저장 (채팅창에 뜨게 함)
-        video_msg = {
-            "roomId": room_id,
-            "senderId": "system_ai",
-            "text": "🎬 요청하신 영상이 생성되었습니다!",
-            "videoUrl": video_url,
-            "type": "video",
-            "createdAt": datetime.now(KST)
-        }
-        db.messages.insert_one(video_msg)
+        # 4. 결과물 URL 추출 및 DB 저장
+        video_uri = response.predictions[0].get("bytesBase64Encoded")
 
-        return JSONResponse(content={"status": "success", "videoUrl": video_url})
+        return JSONResponse(content={"status": "processing", "op_name": operation.operation.name})
 
     except Exception as e:
         print(f"ERROR: {str(e)}")
