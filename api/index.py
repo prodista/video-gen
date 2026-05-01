@@ -1,5 +1,8 @@
 import os
 import json
+import time
+from datetime import datetime, timedelta, timezone
+
 from google.cloud import storage, aiplatform_v1
 from google.protobuf import json_format
 from google.oauth2 import service_account
@@ -7,50 +10,55 @@ from fastapi import FastAPI, Request, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+
 import vertexai
 from vertexai.preview.generative_models import GenerativeModel
 from pymongo import MongoClient
-from datetime import datetime, timedelta, timezone
 from bson import ObjectId
 
 app = FastAPI()
 
-# 1. 환경 변수에서 서비스 계정 정보 가져오기
-gcp_json_raw = os.environ.get("GCP_SERVICE_ACCOUNT_JSON")
+# 1. 환경 변수 및 설정 로드
+KST = timezone(timedelta(hours=9))
+sa_json = os.environ.get("GCP_SERVICE_ACCOUNT_JSON")
+project_id = os.environ.get("GCP_PROJECT_ID")
+location = os.environ.get("GCP_LOCATION", "us-central1")
+bucket_name = os.environ.get("GCP_BUCKET_NAME")
 
-if gcp_json_raw:
+# 전역 객체 초기화
+video_model = None
+storage_client = None
+prediction_client = None
+
+# 2. 공통 인증 및 클라이언트 초기화
+if sa_json:
     try:
-        # 2. JSON 문자열을 파이썬 딕셔너리로 변환
-        service_account_info = json.loads(gcp_json_raw)
+        sa_info = json.loads(sa_json)
+        credentials = service_account.Credentials.from_service_account_info(sa_info)
         
-        # 3. 명시적으로 Credentials 생성
-        credentials = service_account.Credentials.from_service_account_info(service_account_info)
+        # 1. Vertex AI 기본 초기화
+        vertexai.init(project=project_id, location=location, credentials=credentials)
         
-        # 4. 클라이언트 생성 시 반드시 credentials를 넣음
-        client_options = {"api_endpoint": f"{os.environ.get('GCP_LOCATION')}-aiplatform.googleapis.com"}
+        # 2. GCS 클라이언트 초기화
+        storage_client = storage.Client(credentials=credentials, project=project_id)
+        
+        # 3. 비디오 생성을 위한 PredictionServiceClient 초기화 (LRO용)
+        client_options = {"api_endpoint": f"{location}-aiplatform.googleapis.com"}
         prediction_client = aiplatform_v1.PredictionServiceClient(
             credentials=credentials, 
             client_options=client_options
         )
-        print("✅ PredictionServiceClient 초기화 성공 (인증 완료)")
+        
+        # 4. 일반 생성용 모델 정의
+        video_model = GenerativeModel("veo-3.1-lite-generate-001")
+        
+        print("✅ 모든 GCP 서비스(Vertex AI, GCS, LRO) 초기화 성공")
     except Exception as e:
-        print(f"❌ 인증 설정 중 에러 발생: {e}")
-        prediction_client = None
+        print(f"❌ 초기화 실패: {e}")
 else:
     print("❌ GCP_SERVICE_ACCOUNT_JSON 환경 변수가 없습니다.")
-    prediction_client = None
 
-# 2. 인증 객체 생성
-credentials = service_account.Credentials.from_service_account_info(service_account_info)
-
-# 3. 클라이언트 생성 시 credentials 전달
-client_options = {"api_endpoint": f"{os.environ.get('GCP_LOCATION')}-aiplatform.googleapis.com"}
-prediction_client = aiplatform_v1.PredictionServiceClient(
-    credentials=credentials,
-    client_options=client_options
-)
-
-# CORS 설정
+# 3. 미들웨어 및 기타 설정
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -59,38 +67,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-KST = timezone(timedelta(hours=9))
-
-# 환경 변수 가져오기
-sa_json = os.environ.get("GCP_SERVICE_ACCOUNT_JSON")
-project_id = os.environ.get("GCP_PROJECT_ID")
-location = os.environ.get("GCP_LOCATION", "us-central1")
-bucket_name = os.environ.get("GCP_BUCKET_NAME") # GCS 버킷 이름 환경변수
-
-video_model = None
-storage_client = None
-
-if sa_json:
-    try:
-        sa_info = json.loads(sa_json)
-        credentials = service_account.Credentials.from_service_account_info(sa_info)
-        
-        # Vertex AI 초기화
-        vertexai.init(project=project_id, location=location, credentials=credentials)
-        # GCS 클라이언트 초기화
-        storage_client = storage.Client(credentials=credentials, project=project_id)
-        
-        # 모델 정의 (변수명: video_model)
-        video_model = GenerativeModel("veo-3.1-lite-generate-001")
-        print("✅ Vertex AI & Video Model 초기화 성공")
-    except Exception as e:
-        print(f"❌ 초기화 실패: {e}")
-
 class VideoRequest(BaseModel):
     prompt: str
-
-client_options = {"api_endpoint": f"{os.environ.get('GCP_LOCATION')}-aiplatform.googleapis.com"}
-prediction_client = aiplatform_v1.PredictionServiceClient(client_options=client_options)
 
 @app.post("/api/generate-video")
 async def generate_video(request: Request):
