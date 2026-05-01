@@ -1,6 +1,6 @@
 import os
 import json
-from google.cloud import storage, aiplatform
+from google.cloud import storage, aiplatform_client_v1
 from google.protobuf import json_format
 from google.oauth2 import service_account
 from fastapi import FastAPI, Request, File, UploadFile, HTTPException
@@ -54,48 +54,59 @@ if sa_json:
 class VideoRequest(BaseModel):
     prompt: str
 
+client_options = {"api_endpoint": f"{os.environ.get('GCP_LOCATION')}-aiplatform.googleapis.com"}
+prediction_client = aiplatform_client_v1.PredictionServiceClient(client_options=client_options)
+
 @app.post("/api/generate-video")
 async def generate_video(request: Request):
     try:
         data = await request.json()
         prompt = data.get("prompt")
         room_id = data.get("roomId")
+        
+        project_id = os.environ.get("GCP_PROJECT_ID")
+        location = os.environ.get("GCP_LOCATION")
+        bucket_name = os.environ.get("GCP_BUCKET_NAME")
 
-        # 1. Vertex AI 엔드포인트 설정
-        client_options = {"api_endpoint": f"{os.environ.get('GCP_LOCATION')}-aiplatform.googleapis.com"}
-        client = aiplatform.gapic.PredictionServiceClient(client_options=client_options)
+        # 1. 모델 경로 설정
+        endpoint = f"projects/{project_id}/locations/{location}/publishers/google/models/veo-3.1-lite-generate-001"
 
-        endpoint = f"projects/{os.environ.get('GCP_PROJECT_ID')}/locations/{os.environ.get('GCP_LOCATION')}/publishers/google/models/veo-3.1-lite-generate-001"
-
-        # 2. Veo 전용 요청 파라미터 구성
+        # 2. 요청 인스턴스 구성
         instance = json_format.ParseDict({
             "prompt": prompt
         }, {})
         
+        # 3. 출력 설정 (GCS 버킷으로 바로 저장하도록 지시)
+        output_file_prefix = f"videos/{room_id}_{int(time.time())}"
         parameters = json_format.ParseDict({
             "sampleCount": 1,
             "aspectRatio": "16:9",
-            "durationSeconds": 5
+            "outputGcsUri": f"gs://{bucket_name}/{output_file_prefix}"
         }, {})
 
-        # 3. 비동기 생성 요청 (LRO 호출)
-        operation = client.predict_long_running(
+        # 4. LRO 요청 실행
+        operation = prediction_client.predict_long_running(
             endpoint=endpoint,
             instances=[instance],
             parameters=parameters,
         )
 
-        print(f"영상 생성 시작 (작업 ID: {operation.operation.name})")
+        # 5. DB에는 "생성 중" 상태로 먼저 기록
+        temp_msg = {
+            "roomId": room_id,
+            "senderId": "system_ai",
+            "text": "🎬 영상 생성 업무를 접수했습니다! 약 1분 뒤에 확인해주세요.",
+            "videoUrl": None, 
+            "status": "processing",
+            "opName": operation.operation.name, # 나중에 상태 확인용
+            "createdAt": datetime.now(KST)
+        }
+        db.messages.insert_one(temp_msg)
 
-        response = operation.result(timeout=90) 
-
-        # 4. 결과물 URL 추출 및 DB 저장
-        video_uri = response.predictions[0].get("bytesBase64Encoded")
-
-        return JSONResponse(content={"status": "processing", "op_name": operation.operation.name})
+        return JSONResponse(content={"status": "success", "message": "요청 완료"})
 
     except Exception as e:
-        print(f"ERROR: {str(e)}")
+        print(f"Veo Error: {str(e)}")
         return JSONResponse(status_code=500, content={"error": str(e)})
         
 # MongoDB 연결
