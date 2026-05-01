@@ -55,27 +55,53 @@ class VideoRequest(BaseModel):
 
 @app.post("/api/generate-video")
 async def generate_video(request: Request):
-    global video_model
+    global video_model, storage_client
+    
     try:
-        if video_model is None:
-            return JSONResponse(
-                status_code=500, 
-                content={"error": "모델 초기화에 실패했습니다. 환경 변수를 확인하세요."}
-            )
-
         data = await request.json()
         prompt = data.get("prompt")
-        
-        if not prompt:
-            return JSONResponse(status_code=400, content={"error": "프롬프트가 누락되었습니다."})
+        room_id = data.get("roomId")
 
-        # 영상 생성 로직 수행...
-        # response = video_model.generate_content(prompt)
+        if not video_model:
+            return JSONResponse(status_code=500, content={"error": "모델이 준비되지 않았습니다."})
+
+        # 1. 영상 생성 요청 (Veo 모델 호출)
+        response = video_model.generate_content(
+            f"Generate a high-quality video based on this prompt: {prompt}"
+        )
+
+        # 2. 결과물에서 영상 데이터(Byte) 추출
+        try:
+            video_part = response.candidates[0].content.parts[0]
+            # 만약 inline_data 형식이면:
+            video_bytes = video_part.inline_data.data
+        except:
+            return JSONResponse(status_code=500, content={"error": "영상 데이터를 추출하지 못했습니다."})
+
+        # 3. GCS(저장소)에 업로드
+        bucket_name = os.environ.get("GCP_BUCKET_NAME")
+        file_name = f"videos/{room_id}_{datetime.now().strftime('%H%M%S')}.mp4"
+        blob = storage_client.bucket(bucket_name).blob(file_name)
         
-        return JSONResponse(content={"status": "success", "videoUrl": "..."})
+        # 바이너리 데이터 업로드 및 권한 설정
+        blob.upload_from_string(video_bytes, content_type='video/mp4')
+        video_url = blob.public_url # 공개 URL 생성
+
+        # 4. DB에 메시지 저장 (채팅창에 뜨게 함)
+        video_msg = {
+            "roomId": room_id,
+            "senderId": "system_ai",
+            "text": "🎬 요청하신 영상이 생성되었습니다!",
+            "videoUrl": video_url,
+            "type": "video",
+            "createdAt": datetime.now(KST)
+        }
+        db.messages.insert_one(video_msg)
+
+        return JSONResponse(content={"status": "success", "videoUrl": video_url})
 
     except Exception as e:
-        # 발생한 실제 에러를 프론트엔드에 전달
+        print(f"ERROR: {str(e)}")
         return JSONResponse(status_code=500, content={"error": str(e)})
         
 # MongoDB 연결
