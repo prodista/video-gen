@@ -1,6 +1,6 @@
 import os
 import json
-from google.cloud import storage, aiplatform_client_v1
+from google.cloud import storage, aiplatform_v1
 from google.protobuf import json_format
 from google.oauth2 import service_account
 from fastapi import FastAPI, Request, File, UploadFile, HTTPException
@@ -55,7 +55,7 @@ class VideoRequest(BaseModel):
     prompt: str
 
 client_options = {"api_endpoint": f"{os.environ.get('GCP_LOCATION')}-aiplatform.googleapis.com"}
-prediction_client = aiplatform_client_v1.PredictionServiceClient(client_options=client_options)
+prediction_client = aiplatform_v1.PredictionServiceClient(client_options=client_options)
 
 @app.post("/api/generate-video")
 async def generate_video(request: Request):
