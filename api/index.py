@@ -15,8 +15,30 @@ from bson import ObjectId
 
 app = FastAPI()
 
-# 1. 환경 변수에서 서비스 계정 JSON 로드
-service_account_info = json.loads(os.environ.get("GCP_SERVICE_ACCOUNT_JSON"))
+# 1. 환경 변수에서 서비스 계정 정보 가져오기
+gcp_json_raw = os.environ.get("GCP_SERVICE_ACCOUNT_JSON")
+
+if gcp_json_raw:
+    try:
+        # 2. JSON 문자열을 파이썬 딕셔너리로 변환
+        service_account_info = json.loads(gcp_json_raw)
+        
+        # 3. 명시적으로 Credentials 생성
+        credentials = service_account.Credentials.from_service_account_info(service_account_info)
+        
+        # 4. 클라이언트 생성 시 반드시 credentials를 넣음
+        client_options = {"api_endpoint": f"{os.environ.get('GCP_LOCATION')}-aiplatform.googleapis.com"}
+        prediction_client = aiplatform_v1.PredictionServiceClient(
+            credentials=credentials, 
+            client_options=client_options
+        )
+        print("✅ PredictionServiceClient 초기화 성공 (인증 완료)")
+    except Exception as e:
+        print(f"❌ 인증 설정 중 에러 발생: {e}")
+        prediction_client = None
+else:
+    print("❌ GCP_SERVICE_ACCOUNT_JSON 환경 변수가 없습니다.")
+    prediction_client = None
 
 # 2. 인증 객체 생성
 credentials = service_account.Credentials.from_service_account_info(service_account_info)
